@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FluidBLCX Engine — Powered by Sui</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;500;700;800&display=swap');
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: #010510;
+            overflow: hidden;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #e2e8f0;
+            user-select: none;
+        }
+
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-viewport {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        header,
+        .motto-box-container,
+        #ai-agent-wrapper {
+            pointer-events: auto;
+        }
+
+        /* ── DOCKED PREMIUM NAVIGATION BAR ── */
+        header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 18px 40px;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(4, 12, 36, 0.4) 0%, rgba(2, 6, 20, 0.2) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.12);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            justify-self: start;
+        }
+
+        .logo-container {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-sui-watermark {
+            fill: none;
+            stroke: #38bdf8;
+            stroke-width: 2.2;
+            filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+        }
+
+        .brand-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 30%, #93c5fd 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .powered-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            color: #38bdf8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-features-center {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            font-size: 14px;
+            font-weight: 500;
+            color: #94a3b8;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            position: relative;
+            padding: 6px 0;
+            transition: color 0.25s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #38bdf8;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #38bdf8, #2563eb);
+            transition: width 0.25s ease;
+            border-radius: 2px;
+        }
+
+        .nav-link.active::after,
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-controls-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-self: end;
+        }
+
+        .network-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #cbd5e1;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+        }
+
+        .connect-btn {
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 13px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 9px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ── CENTERED TYPOGRAPHY FOCUS ── */
+        .motto-box-container {
+            position: absolute;
+            left: 38%;
+            top: 42%;
+            transform: translateY(-50%);
+            width: max-content;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .typing-line {
+            white-space: nowrap;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .line-1 {
+            font-size: 44px;
+            font-weight: 800;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+        }
+
+        .line-2 {
+            font-size: 56px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 14px;
+            height: 1.1em;
+            background-color: #38bdf8;
+            margin-left: 12px;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink {
+
+            from,
+            to {
+                background-color: transparent
+            }
+
+            50% {
+                background-color: #38bdf8;
+            }
+        }
+
+        /* ── SIDE DRAWER WALLET DIALOG CONTROLLER ── */
+        .wallet-sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(1, 4, 15, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .wallet-sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .wallet-side-dialog {
+            position: fixed;
+            top: 0;
+            right: -460px;
+            width: 420px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(5, 14, 40, 0.88) 0%, rgba(1, 5, 16, 0.98) 100%);
+            border-left: 1px solid rgba(56, 189, 248, 0.22);
+            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.75), inset 1px 0 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            z-index: 10001;
+            padding: 34px 28px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .wallet-sidebar-overlay.active+.wallet-side-dialog,
+        .wallet-side-dialog.active {
+            transform: translateX(-460px);
+        }
+
+        .wallet-side-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .wallet-side-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .wallet-side-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            color: #ffffff;
+        }
+
+        .wallet-side-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .wallet-side-close-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .wallet-side-close-btn:hover {
+            color: #ffffff;
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .wallet-side-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* Custom Scrollbar for list */
+        .wallet-side-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .wallet-side-list::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.15);
+            border-radius: 2px;
+        }
+
+        .wallet-side-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .wallet-side-option:hover {
+            background: rgba(56, 189, 248, 0.07);
+            border-color: rgba(56, 189, 248, 0.35);
+            transform: translateX(-4px);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.12);
+        }
+
+        .wallet-side-option-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .wallet-side-brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .wallet-side-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .wallet-side-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .wallet-side-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .wallet-side-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .wallet-side-footer-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .wallet-side-footer-link {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .wallet-side-footer-link:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+
+        /* ── DRAGGABLE AI AGENT SYSTEM ── */
+        #ai-agent-wrapper {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 16px;
+        }
+
+        .agent-trigger {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: radial-gradient(135deg, #111827 0%, #030712 100%);
+            border: 2px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 0 20px rgba(4, 12, 32, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: border-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .agent-trigger:active {
+            cursor: grabbing;
+            transform: scale(0.96);
+        }
+
+        .agent-trigger:hover {
+            border-color: #38bdf8;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+        }
+
+        .agent-gear-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border: 3px dashed rgba(56, 189, 248, 0.2);
+            border-radius: 50%;
+            animation: spinGear 25s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes spinGear {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .agent-icon {
+            width: 34px;
+            height: 34px;
+            fill: none;
+            stroke: #38bdf8;
+            stroke-width: 2.2;
+            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+            transition: transform 0.3s ease;
+        }
+
+        .wave-ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(37, 99, 235, 0.05) 70%, rgba(0, 0, 0, 0) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .wave-ripple.active {
+            animation: expandRadiant 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes expandRadiant {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(6);
+                opacity: 0;
+                border-width: 0.5px;
+            }
+        }
+
+        .agent-chat-window {
+            width: 360px;
+            height: 480px;
+            background: linear-gradient(135deg, rgba(6, 18, 48, 0.75) 0%, rgba(2, 7, 24, 0.85) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 18px;
+            backdrop-filter: blur(25px) saturate(160%);
+            -webkit-backdrop-filter: blur(25px) saturate(160%);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+            transform-origin: bottom right;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .agent-chat-window.open {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        .chat-header {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-avatar-glow {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #38bdf8;
+            box-shadow: 0 0 10px #38bdf8;
+        }
+
+        .chat-header-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .chat-header-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #64748b;
+            margin-left: auto;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .msg-bubble {
+            max-width: 85%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .msg-agent {
+            background: rgba(56, 189, 248, 0.06);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            color: #e2e8f0;
+            align-self: flex-start;
+            border-top-left-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 14px;
+            background: rgba(1, 5, 16, 0.5);
+            border-top: 1px solid rgba(56, 189, 248, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.25s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #38bdf8;
+        }
+
+        .chat-send-btn {
+            background: #1d4ed8;
+            border: none;
+            color: white;
+            padding: 0 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .chat-send-btn:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="app-viewport">
+        <header>
+            <div class="brand-group">
+                <div class="logo-container">
+                    <svg viewBox="0 0 24 24" class="logo-sui-watermark">
+                        <path d="M12,2C12,2 4,10 4,14C4,18.42 7.58,22 12,22C16.42,22 20,18.42 20,14C20,10 12,2 12,2Z" />
+                    </svg>
+                </div>
+                <h1 class="brand-title">FluidBLCX</h1>
+                <div class="powered-badge">powered by sui</div>
+            </div>
+
+            <nav class="nav-features-center">
+                <span class="nav-link active">Home</span>
+                <span class="nav-link">Compiler</span>
+                <span class="nav-link">DeepBook v3</span>
+                <span class="nav-link">Walrus Vault</span>
+            </nav>
+
+            <div class="nav-controls-right">
+                <div class="network-status">
+                    <span class="status-dot"></span>
+                    Sui Testnet
+                </div>
+                <button class="connect-btn" id="connectWalletBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M12 2v9M8 5h8"></path>
+                    </svg>
+                    Connect Wallet
+                </button>
+            </div>
+        </header>
+
+        <div class="motto-box-container">
+            <div class="typing-line">
+                <span id="text-line-1" class="line-1"></span>
+                <span id="cursor-line-1" class="typing-cursor"></span>
+            </div>
+            <div class="typing-line">
+                <span id="text-line-2" class="line-2"></span>
+                <span id="cursor-line-2" class="typing-cursor" style="display: none;"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="wallet-sidebar-overlay" id="walletOverlay"></div>
+    <div class="wallet-side-dialog" id="walletSideDialog">
+        <div class="wallet-side-header">
+            <div class="wallet-side-title-group">
+                <h3 class="wallet-side-title">Connect Wallet</h3>
+                <span class="wallet-side-subtitle">Select your preferred Sui network provider</span>
+            </div>
+            <button class="wallet-side-close-btn" id="closeWalletBtn">&times;</button>
+        </div>
+        <div class="wallet-side-list">
+            <div class="wallet-side-option">
+                <div class="wallet-side-option-left">
+                    <div class="wallet-side-brand-icon" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
+                        <img src="requiredimage/suiwallet.png" alt="Description" width="40" height="30">
+                    </div>
+                    <span class="wallet-side-name">Sui Wallet</span>
+                </div>
+                <span class="wallet-side-badge">Popular</span>
+            </div>
+            <div class="wallet-side-option">
+                <div class="wallet-side-option-left">
+                    <div class="wallet-side-brand-icon" style="color: #60a5fa; background: rgba(96, 165, 250, 0.1);">
+                        <img src="requiredimage/coinbase-logo.webp" alt="Description" width="40" height="30">
+                    </div>
+                    <span class="wallet-side-name">Coinbase Wallet</span>
+                </div>
+            </div>
+            <div class="wallet-side-option">
+                <div class="wallet-side-option-left">
+                    <div class="wallet-side-brand-icon" style="color: #a78bfa; background: rgba(167, 139, 250, 0.1);">
+                        <img src="requiredimage/meta_mask.webp" alt="Description" width="30" height="30">
+                    </div>
+                    <span class="wallet-side-name">MetaMask Wallet</span>
+                </div>
+            </div>
+            <div class="wallet-side-option">
+                <div class="wallet-side-option-left">
+                    <div class="wallet-side-brand-icon" style="color: #f43f5e; background: rgba(244, 63, 94, 0.1);">
+                        <img src="requiredimage/trustwallet.png" alt="Description" width="40" height="30">
+                    </div>
+                    <span class="wallet-side-name">Trust Wallet</span>
+                </div>
+            </div>
+            <div class="wallet-side-option">
+                <div class="wallet-side-option-left">
+                    <div class="wallet-side-brand-icon" style="color: #fbbf24; background: rgba(251, 191, 36, 0.1);">
+                        <img src="requiredimage/binance_wallet.webp" alt="Description" width="40" height="30">
+                    </div>
+                    <span class="wallet-side-name">Binance Wallet</span>
+                </div>
+            </div>
+        </div>
+        <div class="wallet-side-footer">
+            <p class="wallet-side-footer-text">
+                By connecting your wallet, you agree to the <br>
+                <a href="#" class="wallet-side-footer-link">Terms of Service</a> &amp; <a href="#"
+                    class="wallet-side-footer-link">Privacy Policy</a>
+            </p>
+        </div>
+    </div>
+
+    <div id="ai-agent-wrapper">
+        <div id="agentChatWindow" class="agent-chat-window">
+            <div class="chat-header">
+                <div class="chat-avatar-glow"></div>
+                <div class="chat-header-title">Fluid Core Intelligence</div>
+                <div class="chat-header-subtitle">v1.0.0-Beta</div>
+            </div>
+            <div class="chat-body">
+                <div class="msg-bubble msg-agent">
+                    System online. I am optimized to track cross-chain telemetry and parse asset routing intents.
+                    Describe your
+                    problem architecture.
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="Ask agent regarding execution paths..." />
+                <button class="chat-send-btn">Send</button>
+            </div>
+        </div>
+
+        <div id="agentTriggerBtn" class="agent-trigger">
+            <div class="agent-gear-ring"></div>
+            <div id="waveRipple" class="wave-ripple"></div>
+            <svg viewBox="0 0 24 24" class="agent-icon">
+                <path d="M12,2C12,2 4,10 4,14C4,18.42 7.58,22 12,22C16.42,22 20,18.42 20,14C20,10 12,2 12,2Z" />
+                <path d="M12,6C12,6 7,12 7,14C7,16.76 9.24,19 12,19" stroke-width="1.2" opacity="0.4" />
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        /* ── WALLET SIDE DIALOG TOGGLE LOGIC ── */
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const walletOverlay = document.getElementById('walletOverlay');
+        const walletSideDialog = document.getElementById('walletSideDialog');
+        const closeWalletBtn = document.getElementById('closeWalletBtn');
+
+        connectWalletBtn.addEventListener('click', () => {
+            walletOverlay.classList.add('active');
+            walletSideDialog.classList.add('active');
+        });
+
+        const dismissWalletSide = () => {
+            walletOverlay.classList.remove('active');
+            walletSideDialog.classList.remove('active');
+        };
+
+        closeWalletBtn.addEventListener('click', dismissWalletSide);
+        walletOverlay.addEventListener('click', dismissWalletSide);
+
+        /* ── TYPING SEQUENCE CONTROLLER ── */
+        const line1Str = "Intent-Driven";
+        const line2Str = "Atomic Asset Routing";
+        const totalDuration = 2400;
+        const splitTime = 900;
+
+        const elLine1 = document.getElementById('text-line-1');
+        const elLine2 = document.getElementById('text-line-2');
+        const cursor1 = document.getElementById('cursor-line-1');
+        const cursor2 = document.getElementById('cursor-line-2');
+
+        let startTime = null;
+
+        function runTypewriter(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+
+            if (elapsed <= splitTime) {
+                const progress = elapsed / splitTime;
+                const currentLength = Math.floor(progress * line1Str.length);
+                elLine1.textContent = line1Str.substring(0, currentLength);
+            }
+            else if (elapsed <= totalDuration) {
+                elLine1.textContent = line1Str;
+                cursor1.style.display = 'none';
+                cursor2.style.display = 'inline-block';
+
+                const progress = (elapsed - splitTime) / (totalDuration - splitTime);
+                const currentLength = Math.floor(progress * line2Str.length);
+                elLine2.textContent = line2Str.substring(0, currentLength);
+            }
+            else {
+                elLine1.textContent = line1Str;
+                elLine2.textContent = line2Str;
+                cursor1.style.display = 'none';
+                cursor2.style.display = 'inline-block';
+                return;
+            }
+            requestAnimationFrame(runTypewriter);
+        }
+
+        function initializePresentation() {
+            setTimeout(() => {
+                const bgCanvas = document.getElementById('bgCanvas');
+                const appViewport = document.querySelector('.app-viewport');
+                if (bgCanvas) bgCanvas.style.opacity = '1';
+                if (appViewport) appViewport.style.opacity = '1';
+                requestAnimationFrame(runTypewriter);
+            }, 200);
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', initializePresentation);
+        } else {
+            initializePresentation();
+        }
+
+        /* ── DRAG ENGINE & CONTROLLER RADIANCE INTERACTION ── */
+        const agentWrapper = document.getElementById('ai-agent-wrapper');
+        const agentTrigger = document.getElementById('agentTriggerBtn');
+        const chatWindow = document.getElementById('agentChatWindow');
+        const waveRipple = document.getElementById('waveRipple');
+
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let initialX = 0, initialY = 0;
+        let dragThresholdDistance = 6;
+
+        agentTrigger.addEventListener('pointerdown', (e) => {
+            isDragging = false;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            const rect = agentWrapper.getBoundingClientRect();
+            initialX = window.innerWidth - rect.right;
+            initialY = window.innerHeight - rect.bottom;
+
+            agentTrigger.setPointerCapture(e.pointerId);
+            agentTrigger.addEventListener('pointermove', onPointerMove);
+            agentTrigger.addEventListener('pointerup', onPointerUp);
+        });
+
+        function onPointerMove(e) {
+            const deltaX = startX - e.clientX;
+            const deltaY = startY - e.clientY;
+
+            if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) > dragThresholdDistance) {
+                isDragging = true;
+            }
+
+            if (isDragging) {
+                let targetRight = initialX + deltaX;
+                let targetBottom = initialY + deltaY;
+
+                targetRight = Math.max(20, Math.min(window.innerWidth - 90, targetRight));
+                targetBottom = Math.max(20, Math.min(window.innerHeight - 90, targetBottom));
+
+                agentWrapper.style.right = targetRight + 'px';
+                agentWrapper.style.bottom = targetBottom + 'px';
+
+                chatWindow.style.transformOrigin = `bottom right`;
+            }
+        }
+
+        function onPointerUp(e) {
+            agentTrigger.releasePointerCapture(e.pointerId);
+            agentTrigger.removeEventListener('pointermove', onPointerMove);
+            agentTrigger.removeEventListener('pointerup', onPointerUp);
+
+            if (!isDragging) {
+                const isOpen = chatWindow.classList.toggle('open');
+
+                if (isOpen) {
+                    waveRipple.classList.remove('active');
+                    void waveRipple.offsetWidth;
+                    waveRipple.classList.add('active');
+
+                    window.boostNebulaActivity();
+                }
+            }
+        }
+
+        /* ── STARDUST ENGINE ANIMATION ── */
+        let nebulaActivityPulse = 1.0;
+        window.boostNebulaActivity = function () {
+            nebulaActivityPulse = 3.5;
+        };
+
+        (function () {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let W, H, CX, CY;
+            let stars = [];
+            let streamParticles = [];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                W = canvas.width;
+                H = canvas.height;
+                CX = W * 0.44;
+                CY = H * 0.44;
+            }
+
+            function mkStar() {
+                const r = Math.random();
+                let size, alpha, color;
+                if (r < 0.70) {
+                    size = Math.random() * 0.8 + 0.2;
+                    alpha = Math.random() * 0.4 + 0.1;
+                    color = `rgba(${180 + Math.round(Math.random() * 60)},${200 + Math.round(Math.random() * 40)},255,`;
+                } else if (r < 0.92) {
+                    size = Math.random() * 1.4 + 0.7;
+                    alpha = Math.random() * 0.55 + 0.25;
+                    color = `rgba(${200 + Math.round(Math.random() * 55)},${210 + Math.round(Math.random() * 45)},255,`;
+                } else {
+                    size = Math.random() * 2.2 + 1.2;
+                    alpha = Math.random() * 0.65 + 0.45;
+                    color = `rgba(255,255,255,`;
+                }
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size, baseAlpha: alpha, alpha, color,
+                    twinkleSpeed: Math.random() * 0.015 + 0.003,
+                    twinklePhase: Math.random() * Math.PI * 2,
+                    bloom: Math.random() > 0.97,
+                };
+            }
+
+            function mkStreamParticle() {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 1.8 + 0.3;
+                const dist = Math.random() * 80 + 10;
+                return {
+                    x: CX + Math.cos(angle) * dist,
+                    y: CY + Math.sin(angle) * dist,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    decay: Math.random() * 0.006 + 0.002,
+                    size: Math.random() * 1.5 + 0.3,
+                    hue: Math.random() > 0.3 ? 'blue' : 'white',
+                };
+            }
+
+            function init() {
+                stars = [];
+                const count = Math.floor((W * H) / 1200);
+                for (let i = 0; i < count; i++) stars.push(mkStar());
+
+                streamParticles = [];
+                for (let i = 0; i < 1800; i++) {
+                    const sp = mkStreamParticle();
+                    const advance = Math.random() * 200;
+                    sp.x += sp.vx * advance;
+                    sp.y += sp.vy * advance;
+                    sp.life -= sp.decay * advance;
+                    if (sp.life <= 0) sp.life = Math.random() * 0.4 + 0.05;
+                    streamParticles.push(sp);
+                }
+            }
+
+            function drawNebula() {
+                // 1. Base dark-navy fill
+                const bg = ctx.createRadialGradient(CX, CY, 0, CX * 0.8, CY * 0.6, W * 0.9);
+                bg.addColorStop(0, '#051236');
+                bg.addColorStop(0.3, '#020920');
+                bg.addColorStop(0.7, '#010512');
+                bg.addColorStop(1, '#010308');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, W, H);
+
+                // 2. Wide outer glow
+                const og = ctx.createRadialGradient(CX, CY, 0, CX, CY * 1.1, W * 0.75);
+                og.addColorStop(0, 'rgba(24,70,220,0.35)');
+                og.addColorStop(0.25, 'rgba(12,40,170,0.22)');
+                og.addColorStop(0.5, 'rgba(6,22,90,0.12)');
+                og.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = og; ctx.fillRect(0, 0, W, H);
+
+                // 3. Mid nebula cloud
+                const mg = ctx.createRadialGradient(CX + W * 0.03, CY - H * 0.04, 0, CX, CY, W * 0.45);
+                mg.addColorStop(0, 'rgba(56,189,248,0.38)');
+                mg.addColorStop(0.18, 'rgba(37,99,235,0.26)');
+                mg.addColorStop(0.4, 'rgba(12,44,180,0.15)');
+                mg.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = mg; ctx.fillRect(0, 0, W, H);
+
+                // 4. Inner corona
+                const ig = ctx.createRadialGradient(CX, CY, 0, CX, CY, W * 0.22);
+                ig.addColorStop(0, `rgba(135,210,255,${0.6 * Math.min(2, nebulaActivityPulse)})`);
+                ig.addColorStop(0.06, 'rgba(56,189,248,0.52)');
+                ig.addColorStop(0.15, 'rgba(37,99,235,0.35)');
+                ig.addColorStop(0.65, 'rgba(8,25,100,0.05)');
+                ig.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H);
+
+                // 5. Lower-left nebula arm
+                const a1 = ctx.createRadialGradient(CX - W * 0.2, CY + H * 0.12, 0, CX - W * 0.2, CY + H * 0.12, W * 0.38);
+                a1.addColorStop(0, 'rgba(24,70,220,0.15)');
+                a1.addColorStop(0.4, 'rgba(8,25,100,0.08)');
+                a1.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = a1; ctx.fillRect(0, 0, W, H);
+
+                // 6. Upper-right arm
+                const a2 = ctx.createRadialGradient(CX + W * 0.18, CY - H * 0.15, 0, CX + W * 0.18, CY - H * 0.15, W * 0.32);
+                a2.addColorStop(0, 'rgba(56,189,248,0.14)');
+                a2.addColorStop(0.4, 'rgba(12,40,170,0.06)');
+                a2.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = a2; ctx.fillRect(0, 0, W, H);
+            }
+
+            function drawStarBloom(x, y, size) {
+                const len = size * 6;
+                [[x - len, y, x + len, y], [x, y - len, x, y + len]].forEach(([x0, y0, x1, y1]) => {
+                    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+                    g.addColorStop(0, 'rgba(255,255,255,0)');
+                    g.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+                    g.addColorStop(1, 'rgba(255,255,255,0)');
+                    ctx.strokeStyle = g; ctx.lineWidth = 0.5;
+                    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+                });
+            }
+
+            let frame = 0;
+            function draw() {
+                frame++;
+
+                if (nebulaActivityPulse > 1.0) {
+                    nebulaActivityPulse -= 0.05;
+                }
+
+                drawNebula();
+
+                /* Stream particles */
+                for (let i = 0; i < streamParticles.length; i++) {
+                    const p = streamParticles[i];
+                    p.x += p.vx * (1 + (nebulaActivityPulse - 1) * 0.4);
+                    p.y += p.vy * (1 + (nebulaActivityPulse - 1) * 0.4);
+                    p.life -= p.decay;
+                    if (p.life <= 0) { Object.assign(p, mkStreamParticle()); continue; }
+                    const dist = Math.sqrt((p.x - CX) ** 2 + (p.y - CY) ** 2);
+                    const fadeIn = Math.min(1, dist / 30);
+                    const alpha = p.life * fadeIn;
+                    if (p.hue === 'white') {
+                        ctx.fillStyle = `rgba(220,235,255,${alpha * 0.75})`;
+                    } else {
+                        const blue = Math.max(0, 1 - dist / (W * 0.4));
+                        ctx.fillStyle = `rgba(${Math.round(80 + blue * 120)},${Math.round(130 + blue * 80)},255,${alpha * 0.75})`;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * (0.5 + p.life * 0.5), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                /* Stars */
+                for (let i = 0; i < stars.length; i++) {
+                    const s = stars[i];
+                    s.twinklePhase += s.twinkleSpeed;
+                    s.alpha = s.baseAlpha * (0.65 + 0.35 * Math.sin(s.twinklePhase));
+                    ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fillStyle = s.color + s.alpha + ')'; ctx.fill();
+                    if (s.bloom) drawStarBloom(s.x, s.y, s.size);
+                }
+
+                /* Central blazing star core configuration */
+                const pulse = (0.88 + 0.12 * Math.sin(frame * 0.025)) * nebulaActivityPulse;
+
+                const h1 = ctx.createRadialGradient(CX, CY, 0, CX, CY, 90 * pulse);
+                h1.addColorStop(0, 'rgba(200,225,255,0.28)');
+                h1.addColorStop(0.3, 'rgba(56,189,248,0.12)');
+                h1.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = h1; ctx.beginPath(); ctx.arc(CX, CY, 90 * pulse, 0, Math.PI * 2); ctx.fill();
+
+                const h2 = ctx.createRadialGradient(CX, CY, 0, CX, CY, 38 * pulse);
+                h2.addColorStop(0, 'rgba(255,255,255,0.95)');
+                h2.addColorStop(0.15, 'rgba(200,235,255,0.75)');
+                h2.addColorStop(0.35, 'rgba(56,189,248,0.45)');
+                h2.addColorStop(0.65, 'rgba(37,99,235,0.18)');
+                h2.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = h2; ctx.beginPath(); ctx.arc(CX, CY, 38 * pulse, 0, Math.PI * 2); ctx.fill();
+
+                const h3 = ctx.createRadialGradient(CX, CY, 0, CX, CY, 8 * pulse);
+                h3.addColorStop(0, 'rgba(255,255,255,1)');
+                h3.addColorStop(0.4, 'rgba(230,245,255,0.9)');
+                h3.addColorStop(1, 'rgba(180,225,255,0)');
+                ctx.fillStyle = h3; ctx.beginPath(); ctx.arc(CX, CY, 8 * pulse, 0, Math.PI * 2); ctx.fill();
+
+                /* High-fidelity diffraction spikes execution matrix */
+                const sLen = (80 + 20 * pulse) * pulse;
+                const sA = 0.45 * pulse;
+
+                const hSp = ctx.createLinearGradient(CX - sLen, CY, CX + sLen, CY);
+                hSp.addColorStop(0, 'rgba(180,210,255,0)');
+                hSp.addColorStop(0.35, `rgba(200,225,255,${sA * 0.4})`);
+                hSp.addColorStop(0.48, `rgba(240,248,255,${sA})`);
+                hSp.addColorStop(0.5, `rgba(255,255,255,${sA * 1.4})`);
+                hSp.addColorStop(0.52, `rgba(240,248,255,${sA})`);
+                hSp.addColorStop(0.65, `rgba(200,225,255,${sA * 0.4})`);
+                hSp.addColorStop(1, 'rgba(180,210,255,0)');
+                ctx.strokeStyle = hSp; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(CX - sLen, CY); ctx.lineTo(CX + sLen, CY); ctx.stroke();
+
+                const vSp = ctx.createLinearGradient(CX, CY - sLen, CX, CY + sLen);
+                vSp.addColorStop(0, 'rgba(180,210,255,0)');
+                vSp.addColorStop(0.35, `rgba(200,225,255,${sA * 0.35})`);
+                vSp.addColorStop(0.48, `rgba(240,248,255,${sA * 0.9})`);
+                vSp.addColorStop(0.5, `rgba(255,255,255,${sA * 1.3})`);
+                vSp.addColorStop(0.52, `rgba(240,248,255,${sA * 0.9})`);
+                vSp.addColorStop(0.65, `rgba(200,225,255,${sA * 0.35})`);
+                vSp.addColorStop(1, 'rgba(180,210,255,0)');
+                ctx.strokeStyle = vSp; ctx.lineWidth = 1.2;
+                ctx.beginPath(); ctx.moveTo(CX, CY - sLen); ctx.lineTo(CX, CY + sLen); ctx.stroke();
+
+                const dLen = sLen * 0.55, dA = sA * 0.55;
+                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([dx, dy]) => {
+                    const dg = ctx.createLinearGradient(CX - dx * dLen, CY - dy * dLen, CX + dx * dLen, CY + dy * dLen);
+                    dg.addColorStop(0, 'rgba(180,210,255,0)');
+                    dg.addColorStop(0.42, `rgba(220,235,255,${dA * 0.4})`);
+                    dg.addColorStop(0.5, `rgba(255,255,255,${dA})`);
+                    dg.addColorStop(0.58, `rgba(220,235,255,${dA * 0.4})`);
+                    dg.addColorStop(1, 'rgba(180,210,255,0)');
+                    ctx.strokeStyle = dg; ctx.lineWidth = 0.8;
+                    ctx.beginPath(); ctx.moveTo(CX - dx * dLen, CY - dy * dLen); ctx.lineTo(CX + dx * dLen, CY + dy * dLen); ctx.stroke();
+                });
+
+                requestAnimationFrame(draw);
+            }
+
+            resize();
+            init();
+            draw();
+
+            window.addEventListener('resize', () => { resize(); init(); });
+        })();
+    </script>
+</body>
+
+</html>

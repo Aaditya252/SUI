@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FluidBLCX Engine — Advanced Compiler & 3D Node Tracker</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;500;700;800&display=swap');
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: #010510;
+      overflow-x: hidden;
+      font-family: 'Space Grotesk', sans-serif;
+      color: #e2e8f0;
+    }
+
+    /* ── HEADER NAVIGATION (FluidBLCX Synced) ── */
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 18px 40px;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(4, 12, 36, 0.6) 0%, rgba(2, 6, 20, 0.4) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.12);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      justify-self: start;
+    }
+
+    .logo-container {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-sui-watermark {
+      fill: none;
+      stroke: #38bdf8;
+      stroke-width: 2.2;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #93c5fd 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .powered-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-features-center {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      position: relative;
+      padding: 6px 0;
+      transition: color 0.25s ease;
+      cursor: pointer;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: #38bdf8;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #38bdf8, #2563eb);
+      transition: width 0.25s ease;
+      border-radius: 2px;
+    }
+
+    .nav-link.active::after,
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .nav-controls-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-self: end;
+    }
+
+    .network-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #cbd5e1;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background-color: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+    }
+
+    /* ── MAIN WORKSPACE CONTENT GRID ── */
+    .workspace-container {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      padding: 24px;
+      height: calc(100vh - 75px);
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1200px) {
+      .workspace-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    /* ── LEFT INTERFACE: CORE MOVE COMPILER ── */
+    .compiler-panel {
+      background: rgba(4, 12, 36, 0.4);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 16px;
+      backdrop-filter: blur(25px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-icon-glow {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .template-selector {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .template-selector:focus {
+      border-color: #38bdf8;
+    }
+
+    /* Integrated Custom Code Editor Matrix */
+    .editor-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      background: #020715;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .line-numbers {
+      width: 45px;
+      padding: 16px 0;
+      text-align: center;
+      color: #475569;
+      background: rgba(1, 4, 15, 0.5);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      user-select: none;
+    }
+
+    .code-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      resize: none;
+      outline: none;
+      color: #38bdf8;
+      padding: 16px;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* Console Output Stream Terminal */
+    .console-container {
+      height: 180px;
+      background: #01040d;
+      border-top: 1px solid rgba(56, 189, 248, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .console-header {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.01);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .console-logs {
+      flex: 1;
+      padding: 12px 16px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-line {
+      line-height: 1.4;
+    }
+
+    .log-info {
+      color: #94a3b8;
+    }
+
+    .log-success {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .log-warning {
+      color: #f59e0b;
+    }
+
+    .compiler-actions {
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid rgba(56, 189, 248, 0.1);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .action-btn {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+    }
+
+    .btn-secondary:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+    }
+
+    /* ── RIGHT INTERFACE: 3D GRAPH EXPLORER ── */
+    .visualization-panel {
+      background: rgba(4, 12, 36, 0.4);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 16px;
+      backdrop-filter: blur(25px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    #three-canvas-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #01040f;
+      position: relative;
+      cursor: grab;
+    }
+
+    #three-canvas-container:active {
+      cursor: grabbing;
+    }
+
+    /* HUD Block Overlay Specs */
+    .hud-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(2, 7, 24, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .hud-stat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hud-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .hud-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f1f5f9;
+      word-break: break-all;
+    }
+
+    .visualizer-hint {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #94a3b8;
+      pointer-events: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── HIGH FIDELITY HOVER DIALOGUE CARD ── */
+    .hover-dialog-card {
+      position: fixed;
+      z-index: 9999;
+      background: rgba(2, 8, 28, 0.95);
+      border: 1px solid #38bdf8;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85), 0 0 15px rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px;
+      width: 320px;
+      pointer-events: none;
+      display: none;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .dialog-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.75px;
+    }
+
+    .dialog-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      padding: 2px 6px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .dialog-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .field-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .field-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: #e2e8f0;
+      word-break: break-all;
+      line-height: 1.3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="brand-group">
+      <div class="logo-container">
+        <svg viewBox="0 0 24 24" class="logo-sui-watermark">
+          <path d="M12,2C12,2 4,10 4,14C4,18.42 7.58,22 12,22C16.42,22 20,18.42 20,14C20,10 12,2 12,2Z" />
+        </svg>
+      </div>
+      <h1 class="brand-title">FluidBLCX</h1>
+      <div class="powered-badge">powered by sui</div>
+    </div>
+
+    <nav class="nav-features-center">
+      <a href="#" class="nav-link">Home</a>
+      <a href="#" class="nav-link active">Compiler</a>
+      <a href="#" class="nav-link">DeepBook v3</a>
+      <a href="#" class="nav-link">Walrus Vault</a>
+    </nav>
+
+    <div class="nav-controls-right">
+      <div class="network-status">
+        <span class="status-dot"></span>
+        Sui Testnet
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace-container">
+
+    <div class="compiler-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="panel-icon-glow"></div>
+          <h2 class="panel-title">Sui Move Intelligent Compiler Engine</h2>
+        </div>
+        <select class="template-selector" id="templateSelector">
+          <option value="atomicRouting">Atomic Asset Router Template</option>
+          <option value="liquidityPool">DeepBook Liquidity Node</option>
+          <option value="walrusVault">Walrus Encrypted Vault Guard</option>
+        </select>
+      </div>
+
+      <div class="editor-container">
+        <div class="line-numbers" id="lineNumbers"></div>
+        <textarea class="code-textarea" id="codeEditor" spellcheck="false"></textarea>
+      </div>
+
+      <div class="console-container">
+        <div class="console-header">System Compiling Stream Log Console</div>
+        <div class="console-logs" id="consoleLogs">
+          <span class="log-line log-info">[SYSTEM] Engine status active v2.6.0. Waiting for optimization
+            parameters...</span>
+        </div>
+      </div>
+
+      <div class="compiler-actions">
+        <button class="action-btn btn-secondary" id="btnSimulate">Simulate Telemetry Path</button>
+        <button class="action-btn btn-primary" id="btnCompile">Compile &amp; Inject Block</button>
+      </div>
+    </div>
+
+    <div class="visualization-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="panel-icon-glow" style="background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
+          <h2 class="panel-title">3D Real-Time Interconnected Block Visualizer</h2>
+        </div>
+      </div>
+      <div class="visualizer-hint">Hover Blocks to inspect live Testnet Metrics | Drag to Orbit</div>
+      <div id="three-canvas-container"></div>
+
+      <div class="hud-overlay">
+        <div class="hud-stat-box">
+          <span class="hud-label">Selected Node Matrix</span>
+          <span class="hud-value" id="hudNodeId">Block_Genesis_0x001</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-label">Connected Target Parent</span>
+          <span class="hud-value" id="hudParentHash">0x00000000000000000000000000000000</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-label">Execution Fuel Vector</span>
+          <span class="hud-value" id="hudGasUsed">0 MIST</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-label">Sui Package Scope</span>
+          <span class="hud-value" id="hudStatus">IMMUTABLE / GENESIS</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="hover-dialog-card" id="hoverCard">
+    <div class="dialog-header">
+      <span class="dialog-title">Live Testnet Node Ledger</span>
+      <span class="dialog-badge" id="cardStatusBadge">STABLE_SYNC</span>
+    </div>
+    <div class="dialog-field-group">
+      <div class="field-box">
+        <span class="field-label">Node ID Hash</span>
+        <span class="field-value" id="valNodeId">-</span>
+      </div>
+      <div class="field-box">
+        <span class="field-label">Parent Reference Hash</span>
+        <span class="field-value" id="valParentHash">-</span>
+      </div>
+      <div class="field-box">
+        <span class="field-label">Gas Used Payload</span>
+        <span class="field-value" id="valGasUsed">-</span>
+      </div>
+      <div class="field-box">
+        <span class="field-label">Consensus Status</span>
+        <span class="field-value" id="valStatus">-</span>
+      </div>
+      <div class="field-box">
+        <span class="field-label">Target Interpolation Scale</span>
+        <span class="field-value" id="valTargetScale">-</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    /* ── TEMPLATE CODE STORAGE DICTIONARY ── */
+    const templates = {
+      atomicRouting: `module fluid_blcx::atomic_asset_router {
+    use sui::object::{Self, UID};
+    use sui::tx_context::{Self, TxContext};
+    use sui::coin::{Self, Coin};
+
+    struct RouteIntent has key, store {
+        id: UID,
+        target_path: address,
+        min_return: u64
+    }
+
+    public entry fun init_atomic_route<T>(asset: Coin<T>, path: address, min: u64, ctx: &mut TxContext) {
+        let route = RouteIntent {
+            id: object::new(ctx),
+            target_path: path,
+            min_return: min
+        };
+        // Atomic asset verification logic begins execution paths here
+    }
+}`,
+      liquidityPool: `module fluid_blcx::deepbook_liquidity_node {
+    use sui::object::{Self, UID};
+    use sui::balance::{Self, Supply, Balance};
+    
+    struct PoolCore<phantom BaseAsset, phantom QuoteAsset> has key {
+        id: UID,
+        base_vault: Balance<BaseAsset>,
+        quote_vault: Balance<QuoteAsset>,
+        fee_factor: u64
+    }
+
+    // High performance telemetry matching array updates
+    public fun compute_optimal_swap_vector(pool: &PoolCore, amount: u64): u64 {
+        return amount * pool.fee_factor / 10000
+    }
+}`,
+      walrusVault: `module fluid_blcx::walrus_vault_guard {
+    use sui::object::{Self, UID};
+    use sui::crypto;
+
+    struct EncryptedVault has key, store {
+        id: UID,
+        merkle_root_proof: vector<u8>,
+        storage_node_index: u64
+    }
+
+    public fun verify_shard_integrity(vault: &EncryptedVault, challenge: vector<u8>): bool {
+        // High fidelity proof checking architecture across decentralized networks
+        return true
+    }
+}`
+    };
+
+    /* ── HANDLERS FOR EDITOR INTERACTION MATRIX ── */
+    const editor = document.getElementById('codeEditor');
+    const lineNoContainer = document.getElementById('lineNumbers');
+    const templateSelector = document.getElementById('templateSelector');
+    const consoleLogs = document.getElementById('consoleLogs');
+    const hoverCard = document.getElementById('hoverCard');
+
+    function syncLines() {
+      const lines = editor.value.split('\n').length;
+      lineNoContainer.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+    }
+
+    editor.addEventListener('input', syncLines);
+    templateSelector.addEventListener('change', (e) => {
+      editor.value = templates[e.target.value];
+      syncLines();
+      writeLog(`[INFO] Shifted editor context into target module: "${e.target.value}"`, 'info');
+    });
+
+    function writeLog(text, type = 'info') {
+      const logLine = document.createElement('span');
+      logLine.className = `log-line log-${type}`;
+      logLine.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+      consoleLogs.appendChild(logLine);
+      consoleLogs.scrollTop = consoleLogs.scrollHeight;
+    }
+
+    // Initialize default code setting matrix
+    editor.value = templates.atomicRouting;
+    syncLines();
+
+    /* ── HIGH FIDELITY THREE.JS 3D BLOCKCHAIN VISUALIZATION ENGINE ── */
+    const container = document.getElementById('three-canvas-container');
+    let scene, camera, renderer, controls;
+    let blocksArray = [];
+    let connectionLines = [];
+    let currentlyHoveredBlock = null;
+
+    // Track visualizer variables
+    let nodeCount = 3;
+
+    function initThreeVisualizer() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color('#01040f');
+      scene.fog = new THREE.FogExp2('#01040f', 0.015);
+
+      camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(0, 5, 18);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxDistance = 40;
+      controls.minDistance = 5;
+
+      // Environmental Ambient Lighting
+      const ambientLight = new THREE.AmbientLight(0x0e1c40, 2);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+      directionalLight.position.set(5, 15, 10);
+      scene.add(directionalLight);
+
+      // Generate initial mock blockchain nodes topology
+      for (let i = 0; i < nodeCount; i++) {
+        createBlockNode(i, new THREE.Vector3((i - 1) * 6, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2));
+      }
+      rebuildChainConnections();
+
+      // Starfield Particle Dust Overlay background
+      const starsGeo = new THREE.BufferGeometry();
+      const starsCount = 400;
+      const starPosArray = new Float32Array(starsCount * 3);
+      for (let i = 0; i < starsCount * 3; i++) {
+        starPosArray[i] = (Math.random() - 0.5) * 60;
+      }
+      starsGeo.setAttribute('position', new THREE.BufferAttribute(starPosArray, 3));
+      const starsMat = new THREE.PointsMaterial({ size: 0.1, color: 0x38bdf8, transparent: true, opacity: 0.6 });
+      const starPoints = new THREE.Points(starsGeo, starsMat);
+      scene.add(starPoints);
+
+      animate();
+    }
+
+    function createBlockNode(index, position) {
+      // Main Block Core Mesh Geometry
+      const geometry = new THREE.BoxGeometry(2.2, 2.2, 2.2);
+
+      // Neon Cyberpunk Emissive Styling Materials
+      const material = new THREE.MeshStandardMaterial({
+        color: index === 0 ? 0x1d4ed8 : 0x0284c7,
+        emissive: index === 0 ? 0x0a256e : 0x0369a1,
+        roughness: 0.2,
+        metalness: 0.8,
+        wireframe: false
+      });
+
+      const blockMesh = new THREE.Mesh(geometry, material);
+      blockMesh.position.copy(position);
+
+      // Layered Outer Wireframe Halo Lattice Ring for tech depth
+      const wireframeGeo = new THREE.BoxGeometry(2.4, 2.4, 2.4);
+      const wireframeMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.25
+      });
+      const wireframeMesh = new THREE.Mesh(wireframeGeo, wireframeMat);
+      blockMesh.add(wireframeMesh);
+
+      // Attach Telemetry Data Matrices straight to the Object Node
+      blockMesh.userData = {
+        nodeId: `Block_${index === 0 ? 'Genesis' : 'Node'}_0x7c${Math.floor(Math.random() * 900 + 100)}`,
+        parentHash: index === 0 ? '0x00000000000000000000000000000000' : blocksArray[index - 1].userData.nodeId,
+        gasUsed: `${Math.floor(Math.random() * 25000 + 4000)} MIST`,
+        status: index === 0 ? "IMMUTABLE / GENESIS" : "ACTIVE ROUTING TELEMETRY",
+        targetScale: 1.0  // Live scale targeting multiplier parameter
+      };
+
+      scene.add(blockMesh);
+      blocksArray.push(blockMesh);
+    }
+
+    function rebuildChainConnections() {
+      // Remove previous connections from scene matrix structure
+      connectionLines.forEach(line => scene.remove(line));
+      connectionLines = [];
+
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x38bdf8,
+        linewidth: 2,
+        transparent: true,
+        opacity: 0.6
+      });
+
+      for (let i = 0; i < blocksArray.length - 1; i++) {
+        const points = [
+          blocksArray[i].position,
+          blocksArray[i + 1].position
+        ];
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(lineGeo, lineMaterial);
+        scene.add(line);
+        connectionLines.push(line);
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Animate blocks subtly to simulate system floatation dynamics
+      blocksArray.forEach((block, idx) => {
+        block.rotation.x += 0.005;
+        block.rotation.y += 0.008;
+        block.position.y += Math.sin(Date.now() * 0.001 + idx) * 0.003;
+
+        // Dynamic target scale interpolation
+        let targetSize = (block === currentlyHoveredBlock) ? 1.25 : 1.0;
+        block.userData.targetScale = targetSize;
+
+        // Smoothly interpolate the node vector scale matrix 
+        block.scale.lerp(new THREE.Vector3(targetSize, targetSize, targetSize), 0.12);
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Raycasting Setup for Continuous Pointer-Hover Node Object Tracking
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    /* ── REWRITTEN: LIVE ASYNCHRONOUS TESTNET RPC TELEMETRY LOOKUP PIPELINE ── */
+    async function queryLiveTestnetEndpoint(nodeId) {
+      // Simulation layer of real transaction validation payload lookups on public testnet RPC nodes
+      // To bridge to actual live network data, you would swap this with:
+      // fetch('https://fullnode.testnet.sui.io:443', { method: 'POST', body: JSON.stringify({...}) })
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ syncState: "LIVE_SYNC", timestamp: Date.now() });
+        }, 80);
+      });
+    }
+
+    container.addEventListener('pointermove', async (e) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      // Bound safety checker constraint
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(blocksArray);
+
+        if (intersects.length > 0) {
+          const targetNode = intersects[0].object;
+
+          if (currentlyHoveredBlock !== targetNode) {
+            if (currentlyHoveredBlock) {
+              currentlyHoveredBlock.material.emissive.setHex(currentlyHoveredBlock.userData.parentHash === '0x00000000000000000000000000000000' ? 0x0a256e : 0x0369a1);
+            }
+            currentlyHoveredBlock = targetNode;
+
+            // Highlight emissive flash feedback
+            targetNode.material.emissive.setHex(0x10b981);
+
+            // Change UI text fields to clear loading architecture
+            document.getElementById('cardStatusBadge').textContent = "FETCHING...";
+            document.getElementById('cardStatusBadge').style.color = "#f59e0b";
+            document.getElementById('cardStatusBadge').style.background = "rgba(245, 158, 11, 0.15)";
+
+            writeLog(`[RPC FETCH] Initialized testnet query connection lock for object: ${targetNode.userData.nodeId}`, 'info');
+
+            // Execute simulated async Sui fullnode testnet lookup
+            const liveNetworkState = await queryLiveTestnetEndpoint(targetNode.userData.nodeId);
+
+            if (currentlyHoveredBlock === targetNode) {
+              document.getElementById('cardStatusBadge').textContent = liveNetworkState.syncState;
+              document.getElementById('cardStatusBadge').style.color = "#10b981";
+              document.getElementById('cardStatusBadge').style.background = "rgba(16, 185, 129, 0.15)";
+            }
+          }
+
+          // Populate the Holographic Telemetry Card data parameters
+          const data = targetNode.userData;
+          document.getElementById('valNodeId').textContent = data.nodeId;
+          document.getElementById('valParentHash').textContent = data.parentHash;
+          document.getElementById('valGasUsed').textContent = data.gasUsed;
+          document.getElementById('valStatus').textContent = data.status;
+          document.getElementById('valTargetScale').textContent = data.targetScale.toFixed(2);
+
+          // Sync with the bottom layout HUD Display viewports concurrently
+          document.getElementById('hudNodeId').textContent = data.nodeId;
+          document.getElementById('hudParentHash').textContent = data.parentHash;
+          document.getElementById('hudGasUsed').textContent = data.gasUsed;
+          document.getElementById('hudStatus').textContent = data.status;
+
+          // Align tooltip floating geometry anchor coordinates with offset mapping rules
+          hoverCard.style.left = `${e.clientX + 18}px`;
+          hoverCard.style.top = `${e.clientY + 18}px`;
+          hoverCard.style.display = 'block';
+
+        } else {
+          // Clear hover highlights when mouse exits elements
+          if (currentlyHoveredBlock) {
+            currentlyHoveredBlock.material.emissive.setHex(currentlyHoveredBlock.userData.parentHash === '0x00000000000000000000000000000000' ? 0x0a256e : 0x0369a1);
+            currentlyHoveredBlock = null;
+          }
+          hoverCard.style.display = 'none';
+        }
+      } else {
+        hoverCard.style.display = 'none';
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    /* ── INTERACTION EXECUTION PIPELINES (COMPILING & SIMULATING) ── */
+    document.getElementById('btnSimulate').addEventListener('click', () => {
+      writeLog("[COMPILER] Initiating simulation run over transaction graph vector...", 'info');
+      setTimeout(() => {
+        writeLog("[SUCCESS] Gas simulation optimized: Gas cost projection evaluated at ~14,202 MIST.", 'success');
+      }, 700);
+    });
+
+    document.getElementById('btnCompile').addEventListener('click', () => {
+      writeLog("[COMPILER] Preparing build pipelines for Sui Move bytecode generator...", 'info');
+
+      setTimeout(() => {
+        writeLog("[COMPILER] Compiling source tree with optimized cross-chain architecture configuration modules...", 'info');
+      }, 600);
+
+      setTimeout(() => {
+        writeLog("[SUCCESS] Compilation completely successful! Structural byte arrays generated.", 'success');
+        writeLog("[BLOCKCHAIN] Injecting newly deployed transactional object module to local chain nodes...", 'success');
+
+        // Dynamically append new real physical node in Three.js Scene interface!
+        const lastNodePos = blocksArray[blocksArray.length - 1].position;
+        const nextPosition = new THREE.Vector3(
+          lastNodePos.x + 5,
+          (Math.random() - 0.5) * 4,
+          (Math.random() - 0.5) * 3
+        );
+
+        createBlockNode(blocksArray.length, nextPosition);
+        rebuildChainConnections();
+
+        // Smooth camera focus panning to target new structural block node added
+        controls.target.copy(nextPosition);
+
+        // Auto-update stats panel to reveal newly formed injected object block parameters
+        const freshBlock = blocksArray[blocksArray.length - 1];
+        document.getElementById('hudNodeId').textContent = freshBlock.userData.nodeId;
+        document.getElementById('hudParentHash').textContent = freshBlock.userData.parentHash;
+        document.getElementById('hudGasUsed').textContent = freshBlock.userData.gasUsed;
+        document.getElementById('hudStatus').textContent = "JUST DEPLOYED / MEMPOOL APPROVED";
+
+      }, 1400);
+    });
+
+    // Bootstrap visualizer canvas rendering systems setup immediately
+    initThreeVisualizer();
+  </script>
+</body>
+
+</html>
