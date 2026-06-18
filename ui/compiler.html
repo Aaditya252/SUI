@@ -239,6 +239,7 @@
     /* Integrated Custom Code Editor Matrix */
     .editor-container {
       flex: 1;
+      min-height: 0;
       position: relative;
       display: flex;
       background: #020715;
@@ -272,9 +273,58 @@
       overflow-x: auto;
     }
 
-    /* Console Output Stream Terminal */
+    /* Local Code Run Terminal */
+    .terminal-container {
+      height: 150px;
+      background: #01040d;
+      border-top: 1px solid rgba(56, 189, 248, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .terminal-header {
+      padding: 8px 16px;
+      background: rgba(16, 185, 129, 0.04);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.12);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #10b981;
+      text-transform: uppercase;
+    }
+
+    .terminal-output {
+      flex: 1;
+      padding: 12px 16px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .terminal-line {
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .terminal-command {
+      color: #38bdf8;
+    }
+
+    .terminal-success {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .terminal-warning {
+      color: #f59e0b;
+    }
+
+    /* Console Output Stream Log */
     .console-container {
-      height: 180px;
+      height: 152px;
       background: #01040d;
       border-top: 1px solid rgba(56, 189, 248, 0.15);
       display: flex;
@@ -388,12 +438,17 @@
       cursor: grabbing;
     }
 
+    .visualizer-stage {
+      position: relative;
+      flex: 1;
+      min-height: 280px;
+      background: #01040f;
+    }
+
     /* HUD Block Overlay Specs */
     .hud-overlay {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
+      flex: 0 0 auto;
+      margin: 0 20px 16px;
       background: rgba(2, 7, 24, 0.85);
       border: 1px solid rgba(56, 189, 248, 0.25);
       border-radius: 12px;
@@ -427,7 +482,7 @@
 
     .visualizer-hint {
       position: absolute;
-      top: 70px;
+      top: 14px;
       right: 20px;
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -560,11 +615,11 @@
         <textarea class="code-textarea" id="codeEditor" spellcheck="false"></textarea>
       </div>
 
-      <div class="console-container">
-        <div class="console-header">System Compiling Stream Log Console</div>
-        <div class="console-logs" id="consoleLogs">
-          <span class="log-line log-info">[SYSTEM] Engine status active v2.6.0. Waiting for optimization
-            parameters...</span>
+      <div class="terminal-container">
+        <div class="terminal-header">Compiler Run Terminal</div>
+        <div class="terminal-output" id="terminalOutput">
+          <span class="terminal-line terminal-command">$ sui move build --watch</span>
+          <span class="terminal-line">Terminal ready. Run simulation or compile to view output here.</span>
         </div>
       </div>
 
@@ -581,8 +636,18 @@
           <h2 class="panel-title">3D Real-Time Interconnected Block Visualizer</h2>
         </div>
       </div>
-      <div class="visualizer-hint">Hover Blocks to inspect live Testnet Metrics | Drag to Orbit</div>
-      <div id="three-canvas-container"></div>
+      <div class="visualizer-stage">
+        <div class="visualizer-hint">Hover Blocks to inspect live Testnet Metrics | Drag to Orbit</div>
+        <div id="three-canvas-container"></div>
+      </div>
+
+      <div class="console-container">
+        <div class="console-header">System Compiling Stream Log Console</div>
+        <div class="console-logs" id="consoleLogs">
+          <span class="log-line log-info">[SYSTEM] Engine status active v2.6.0. Waiting for optimization
+            parameters...</span>
+        </div>
+      </div>
 
       <div class="hud-overlay">
         <div class="hud-stat-box">
@@ -698,6 +763,7 @@
     const lineNoContainer = document.getElementById('lineNumbers');
     const templateSelector = document.getElementById('templateSelector');
     const consoleLogs = document.getElementById('consoleLogs');
+    const terminalOutput = document.getElementById('terminalOutput');
     const hoverCard = document.getElementById('hoverCard');
 
     function syncLines() {
@@ -718,6 +784,14 @@
       logLine.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
       consoleLogs.appendChild(logLine);
       consoleLogs.scrollTop = consoleLogs.scrollHeight;
+    }
+
+    function writeTerminal(text, type = '') {
+      const terminalLine = document.createElement('span');
+      terminalLine.className = `terminal-line ${type ? `terminal-${type}` : ''}`;
+      terminalLine.textContent = text;
+      terminalOutput.appendChild(terminalLine);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
     }
 
     // Initialize default code setting matrix
@@ -964,21 +1038,29 @@
     /* ── INTERACTION EXECUTION PIPELINES (COMPILING & SIMULATING) ── */
     document.getElementById('btnSimulate').addEventListener('click', () => {
       writeLog("[COMPILER] Initiating simulation run over transaction graph vector...", 'info');
+      writeTerminal("$ sui move test --simulated-telemetry", 'command');
+      writeTerminal("Resolving transaction graph vector...");
       setTimeout(() => {
         writeLog("[SUCCESS] Gas simulation optimized: Gas cost projection evaluated at ~14,202 MIST.", 'success');
+        writeTerminal("Simulation passed: gas projection ~14,202 MIST.", 'success');
       }, 700);
     });
 
     document.getElementById('btnCompile').addEventListener('click', () => {
       writeLog("[COMPILER] Preparing build pipelines for Sui Move bytecode generator...", 'info');
+      writeTerminal("$ sui move build --dump-bytecode-as-base64", 'command');
+      writeTerminal("Preparing Move source tree...");
 
       setTimeout(() => {
         writeLog("[COMPILER] Compiling source tree with optimized cross-chain architecture configuration modules...", 'info');
+        writeTerminal("Compiling modules: fluid_blcx::atomic_asset_router");
       }, 600);
 
       setTimeout(() => {
         writeLog("[SUCCESS] Compilation completely successful! Structural byte arrays generated.", 'success');
         writeLog("[BLOCKCHAIN] Injecting newly deployed transactional object module to local chain nodes...", 'success');
+        writeTerminal("Build finished successfully.", 'success');
+        writeTerminal("Bytecode generated and block injection request accepted.", 'success');
 
         // Dynamically append new real physical node in Three.js Scene interface!
         const lastNodePos = blocksArray[blocksArray.length - 1].position;
