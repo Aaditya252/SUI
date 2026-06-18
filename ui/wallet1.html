@@ -1,0 +1,1292 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FluidBLCX Matrix — Quantum Premium dApp Shell</title>
+  <style>
+    /* ── SYSTEM UI ENGINEER CONFIGURATION VARIABLE MATRIX ── */
+    :root {
+      --bg-space: #040610;
+      --bg-nebula: radial-gradient(circle at 50% -20%, #0f1636 0%, #040610 70%);
+      --glass-surface: rgba(10, 15, 36, 0.45);
+      --glass-border: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0.03) 100%);
+      --glass-border-hover: linear-gradient(135deg, rgba(56, 189, 248, 0.4) 0%, rgba(99, 102, 241, 0.15) 100%);
+      --text-pure: #f8fafc;
+      --text-muted: #64748b;
+      --text-dim: #475569;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      --accent-gradient-hover: linear-gradient(135deg, #60a5fa 0%, #22d3ee 100%);
+      --functional-green: #10b981;
+      --functional-rose: #f43f5e;
+      --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --spring-transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;500;600;700&display=swap');
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-space);
+      background-image: var(--bg-nebula);
+      color: var(--text-pure);
+      font-family: var(--font-display);
+      overflow: hidden;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── SCROLLBAR KINETICS ── */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.1);
+      border-radius: 20px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.3);
+    }
+
+    /* ── ULTRA-PREMIUM GLASS COMPONENT ENGINE ── */
+    .premium-glass-card {
+      background: var(--glass-surface);
+      border: 1px solid transparent;
+      border-image: var(--glass-border) 1;
+      border-radius: 24px;
+      /* Scaled via mask logic below */
+      position: relative;
+      padding: 28px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      transition: var(--spring-transition);
+    }
+
+    /* Enforced rounding override for border-image compatibility workaround */
+    .premium-glass-card {
+      border: 1px solid rgba(56, 189, 248, 0.12);
+      border-radius: 20px;
+    }
+
+    .premium-glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.25);
+      box-shadow: 0 30px 60px rgba(6, 182, 212, 0.08);
+      transform: translateY(-2px);
+    }
+
+    /* ── APPLICATION SCREEN FRAME LAYOUT ── */
+    #app-shell-root {
+      display: grid;
+      grid-template-rows: 80px 1fr;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ── NAVIGATION RAIL TERMINAL HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(4, 6, 16, 0.4);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+
+    .brand-sigil {
+      width: 32px;
+      height: 32px;
+      fill: none;
+      stroke: url(#cyan-blue-gradient);
+      stroke-width: 2.5;
+      filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Navigation Tab Triggers Hub */
+    .nav-tabs-rail {
+      display: flex;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px;
+      border-radius: 16px;
+      gap: 4px;
+    }
+
+    .nav-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 22px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--spring-transition);
+    }
+
+    .nav-tab-btn:hover {
+      color: var(--text-pure);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-tab-btn.active-tab {
+      color: #ffffff;
+      background: var(--accent-gradient);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .header-action-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .quant-tradex-btn {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      text-decoration: none;
+      background: var(--accent-gradient);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 9px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3), 0 0 20px rgba(6, 182, 212, 0.15);
+      transition: var(--spring-transition);
+    }
+
+    .quant-tradex-btn:hover {
+      background: var(--accent-gradient-hover);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .wallet-status-capsule {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e8f0;
+      background: rgba(9, 15, 36, 0.6);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      padding: 8px 18px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pulse-indicator {
+      width: 8px;
+      height: 8px;
+      background: var(--functional-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--functional-green);
+      animation: corePulse 2s infinite;
+    }
+
+    @keyframes corePulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+      }
+
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    /* ── CORE WORKSPACE WORKVIEW HOUSING ── */
+    .workspace-viewport {
+      display: grid;
+      grid-template-columns: 1fr 440px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 1340px) {
+      .workspace-viewport {
+        grid-template-columns: 1fr;
+      }
+
+      .right-telemetry-sidebar {
+        display: none;
+      }
+    }
+
+    .main-operation-panel {
+      padding: 40px 48px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .tab-view-flow {
+      display: none;
+      animation: viewEnter Dynamics 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .tab-view-flow.active-flow {
+      display: block;
+    }
+
+    @keyframes viewEnter {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.99);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* ── PREMIUM CORE DESIGN INTERACTION WIDGETS ── */
+    .search-box-container {
+      position: relative;
+      margin-bottom: 28px;
+    }
+
+    .search-input-field {
+      width: 100%;
+      background: rgba(2, 5, 15, 0.6);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 14px;
+      padding: 16px 16px 16px 48px;
+      font-family: inherit;
+      color: #ffffff;
+      font-size: 15px;
+      outline: none;
+      transition: var(--spring-transition);
+    }
+
+    .search-input-field:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.15);
+      background: rgba(2, 5, 15, 0.8);
+    }
+
+    .search-lens-svg {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      stroke: var(--text-muted);
+    }
+
+    /* Table System Polish */
+    .quantum-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .quantum-data-table th {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      letter-spacing: 0.08em;
+    }
+
+    .quantum-data-table td {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      font-size: 15px;
+      color: #cbd5e1;
+    }
+
+    .quantum-data-table tbody tr {
+      transition: var(--spring-transition);
+      cursor: pointer;
+    }
+
+    .quantum-data-table tbody tr:hover {
+      background: rgba(6, 182, 212, 0.03);
+    }
+
+    .token-identity-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .token-avatar-ring {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .token-img-asset {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .badge-mono-ticker {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.06);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(6, 182, 212, 0.15);
+    }
+
+    .numeric-data {
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+
+    /* ── TACTILE UTILITY TRANSACTION COMMAND BUTTONS ── */
+    .btn-action-primary {
+      background: var(--accent-gradient);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--spring-transition);
+    }
+
+    .btn-action-primary:hover {
+      background: var(--accent-gradient-hover);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-action-secondary {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-pure);
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--spring-transition);
+    }
+
+    .btn-action-secondary:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* ── TRANSACTION CONTAINER INPUT COMPACT OVERLAYS ── */
+    .trade-input-card {
+      background: rgba(2, 5, 14, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 10px;
+      transition: var(--spring-transition);
+    }
+
+    .trade-input-card:focus-within {
+      border-color: rgba(6, 182, 212, 0.3);
+      background: rgba(2, 5, 14, 0.7);
+    }
+
+    .input-row-space {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .numeric-trade-input {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 600;
+      width: 65%;
+      outline: none;
+    }
+
+    .native-select-styled {
+      background: #090e24;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* ── RIGHT COLUMN TELEMETRY & PRICE TRACKING CONSOLE ── */
+    .right-telemetry-sidebar {
+      background: rgba(4, 6, 16, 0.3);
+      border-left: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      backdrop-filter: blur(8px);
+    }
+
+    .chart-container-panel {
+      background: rgba(2, 6, 19, 0.7);
+      border: 1px solid rgba(6, 182, 212, 0.12);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* ── GLASS COMPONENT SYSTEM MODAL CORE SHEETS ── */
+    .modal-viewport-blur-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 4, 10, 0.8);
+      backdrop-filter: blur(16px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-viewport-blur-wrapper.modal-active-state {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box-architecture {
+      background: #050816;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      padding: 36px;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+      position: relative;
+      transform: scale(0.95);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-viewport-blur-wrapper.modal-active-state .modal-box-architecture {
+      transform: scale(1);
+    }
+
+    .modal-dismiss-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 24px;
+      transition: color 0.2s;
+    }
+
+    .modal-dismiss-btn:hover {
+      color: #ffffff;
+    }
+
+    /* Cybernetic Scanner Viewport Overlay Graphic */
+    .cyber-camera-viewport {
+      width: 100%;
+      height: 220px;
+      background: #01030a;
+      border-radius: 16px;
+      margin: 20px 0;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .laser-scan-line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 15px var(--accent-cyan);
+      top: 0;
+      animation: sweepLaser 2.5s ease-in-out infinite;
+    }
+
+    @keyframes sweepLaser {
+      0% {
+        top: 0%;
+      }
+
+      50% {
+        top: 100%;
+      }
+
+      100% {
+        top: 0%;
+      }
+    }
+
+    #qr-container-target {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 16px;
+      margin: 24px auto;
+      width: 192px;
+      height: 192px;
+    }
+  </style>
+
+  <svg width="0" height="0" style="position: absolute;">
+    <defs>
+      <linearGradient id="cyan-blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#3b82f6" />
+        <stop offset="100%" stop-color="#06b6d4" />
+      </linearGradient>
+    </defs>
+  </svg>
+</head>
+
+<body>
+
+  <div id="app-shell-root">
+
+    <header>
+      <div class="brand-lockup" onclick="switchOperationalFlow('portfolio')">
+        <svg class="brand-sigil" viewBox="0 0 24 24">
+          <path d="M12,2C12,2 4,10 4,14C4,18.42 7.58,22 12,22C16.42,22 20,18.42 20,14C20,10 12,2 12,2Z" />
+        </svg>
+        <h1 class="brand-title">FluidBLCX</h1>
+      </div>
+
+      <nav class="nav-tabs-rail">
+        <button class="nav-tab-btn active-tab" id="btn-flow-portfolio"
+          onclick="switchOperationalFlow('portfolio')">Portfolio</button>
+        <button class="nav-tab-btn" id="btn-flow-markets" onclick="switchOperationalFlow('markets')">Live Spot
+          Market</button>
+        <button class="nav-tab-btn" id="btn-flow-swap" onclick="switchOperationalFlow('swap')">Atomic Swap</button>
+        <button class="nav-tab-btn" id="btn-flow-bridge" onclick="switchOperationalFlow('bridge')">Bridge
+          Gateway</button>
+        <button class="nav-tab-btn" id="btn-flow-vaults" onclick="switchOperationalFlow('vaults')">Yield
+          Farming</button>
+        <button class="nav-tab-btn" id="btn-flow-history" onclick="switchOperationalFlow('history')">Ledger
+          Audit</button>
+      </nav>
+
+      <div class="header-action-cluster">
+        <a class="quant-tradex-btn" href="tradewindow.html">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M3 17l6-6 4 4 8-8" />
+            <path d="M14 7h7v7" />
+          </svg>
+          Quant TradeX
+        </a>
+        <div class="wallet-status-capsule">
+          <span class="pulse-indicator"></span>
+          <span>sui:0x12b3...aa65</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace-viewport">
+
+      <div class="main-operation-panel">
+
+        <div id="flow-portfolio" class="tab-view-flow active-flow">
+          <div class="premium-glass-card"
+            style="margin-bottom: 32px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(4, 6, 16, 0.4) 100%);">
+            <span
+              style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Unified
+              Aggregate Valuation</span>
+            <h2 id="aggregated-fiat-valuation"
+              style="font-size: 52px; font-weight: 800; margin: 4px 0; letter-spacing: -0.04em; color: #ffffff;">$0.00
+            </h2>
+            <div style="font-size: 14px; font-weight: 600; color: var(--functional-green);"
+              id="global-portfolio-delta-percentage">➔ Syncing Blockchain Telemetry Vector...</div>
+
+            <div style="display: flex; gap: 14px; margin-top: 28px;">
+              <button class="btn-action-primary" onclick="triggerModalStateTransition('dispatch-modal', true)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg> Dispatch Assets
+              </button>
+              <button class="btn-action-secondary" onclick="triggerModalStateTransition('receipt-modal', true)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg> Generate Receipt QR
+              </button>
+            </div>
+          </div>
+
+          <div class="search-box-container">
+            <svg class="search-lens-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" class="search-input-field" id="portfolio-query-field"
+              placeholder="Search portfolio nodes by keyword identifier..."
+              oninput="filterActiveTableMatrices('portfolio-query-field', 'tbody-portfolio-target')">
+          </div>
+
+          <div class="premium-glass-card" style="padding: 0; overflow: hidden;">
+            <table class="quantum-data-table">
+              <thead>
+                <tr>
+                  <th>Holding Token Metric</th>
+                  <th>Current Value Spot</th>
+                  <th>Balance Owned</th>
+                  <th>Net Valuation</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-portfolio-target">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="flow-markets" class="tab-view-flow">
+          <div class="search-box-container">
+            <svg class="search-lens-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" class="search-input-field" id="markets-query-field"
+              placeholder="Search market price matrices..."
+              oninput="filterActiveTableMatrices('markets-query-field', 'tbody-markets-target')">
+          </div>
+
+          <div class="premium-glass-card" style="padding: 0; overflow: hidden;">
+            <table class="quantum-data-table">
+              <thead>
+                <tr>
+                  <th>Dynamic Index Asset</th>
+                  <th>Spot Core Valuation</th>
+                  <th>24h Price Change Delta</th>
+                  <th>Total Capital Volume</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-markets-target">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="flow-swap" class="tab-view-flow">
+          <div class="premium-glass-card" style="max-width: 560px; margin: 0 auto;">
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.02em;">Instant
+              Liquidity Pipeline</h3>
+
+            <div class="trade-input-card">
+              <label
+                style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); font-weight:600;">PAYMENT
+                LIQUIDITY OUTFLOW</label>
+              <div class="input-row-space">
+                <input type="number" class="numeric-trade-input" id="swap-source-qty" value="10.0"
+                  oninput="calculateInboundSwapPipeline()">
+                <select class="native-select-styled" id="swap-source-asset-select"
+                  onchange="calculateInboundSwapPipeline()">
+                  <option value="ethereum">ETH</option>
+                  <option value="sui" selected>SUI</option>
+                  <option value="solana">SOL</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; margin: -4px 0 6px 0;">
+              <div
+                style="width:40px; height:40px; background:#0a0f24; border:1px solid rgba(6, 182, 212, 0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:var(--spring-transition);"
+                onclick="invertSwapAssetParameters()" onmouseover="this.style.borderColor='#06b6d4'"
+                onmouseout="this.style.borderColor='rgba(6, 182, 212, 0.3)'">
+                <svg width="16" height="16" style="color: var(--accent-cyan);" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <path d="M7 16V4m0 0L3 8m4-4l4 4m6 12V8m0 12l4-4m-4 4l-4-4" />
+                </svg>
+              </div>
+            </div>
+
+            <div class="trade-input-card">
+              <label
+                style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); font-weight:600;">ESTIMATED
+                RECEIPT INFLOW</label>
+              <div class="input-row-space">
+                <input type="number" class="numeric-trade-input" id="swap-target-qty" readonly>
+                <select class="native-select-styled" id="swap-target-asset-select"
+                  onchange="calculateInboundSwapPipeline()">
+                  <option value="bitcoin">BTC</option>
+                  <option value="tether" selected>USDT</option>
+                  <option value="binancecoin">BNB</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn-action-primary" style="width: 100%; margin-top: 16px;"
+              onclick="broadcastSimulatedTransactionBlock('Liquidity Atomic Swap Execution Successful')">Inject Smart
+              Liquidity Contract</button>
+          </div>
+        </div>
+
+        <div id="flow-bridge" class="tab-view-flow">
+          <div class="premium-glass-card" style="max-width: 560px; margin: 0 auto;">
+            <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 24px;">Multi-Chain Layer-1 Gateway</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div>
+                <label
+                  style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display:block; margin-bottom:6px;">ORIGIN
+                  SOURCE BLOCKCHAIN</label>
+                <select class="native-select-styled" style="width:100%; padding:12px;" id="bridge-origin-ledger">
+                  <option value="sui">Sui Sovereign Network</option>
+                  <option value="eth">Ethereum Virtual Machine</option>
+                  <option value="sol">Solana Consensus Matrix</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display:block; margin-bottom:6px;">DESTINATION
+                  TARGET BLOCKCHAIN</label>
+                <select class="native-select-styled" style="width:100%; padding:12px;" id="bridge-destination-ledger">
+                  <option value="eth">Ethereum Virtual Machine</option>
+                  <option value="bsc">Binance Smart Chain Network</option>
+                  <option value="sui">Sui Sovereign Network</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="trade-input-card">
+              <label
+                style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); font-weight:600;">QUANTITY
+                TRANSIT HOUSING</label>
+              <div class="input-row-space">
+                <input type="number" class="numeric-trade-input" id="bridge-payload-amount" value="250">
+                <select class="native-select-styled" id="bridge-target-token-select">
+                  <option value="sui">SUI</option>
+                  <option value="tether">USDT</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn-action-primary" style="width: 100%; margin-top: 16px;"
+              onclick="broadcastSimulatedTransactionBlock('Cross-Chain Bridge Route Protocol Acknowledged')">Broadcast
+              Bridge Sequence</button>
+          </div>
+        </div>
+
+        <div id="flow-vaults" class="tab-view-flow">
+          <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 20px; letter-spacing:-0.02em;">Consensus Staking
+            Vault Pipelines</h3>
+          <div class="premium-glass-card" style="padding: 0; overflow: hidden;">
+            <table class="quantum-data-table">
+              <thead>
+                <tr>
+                  <th>Vault Deployment Array</th>
+                  <th>Compound APY Yield</th>
+                  <th>Your Position Value</th>
+                  <th>Execution Protocol Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="token-identity-group"><span class="badge-mono-ticker">SUI Native Vault</span> Core
+                      Validation consensus pathway</div>
+                  </td>
+                  <td style="color: var(--functional-green); font-family: var(--font-mono); font-weight: 700;">6.82% APY
+                  </td>
+                  <td class="numeric-data">1,200.00 SUI</td>
+                  <td><button class="btn-action-primary" style="padding: 8px 16px; font-size:12px; border-radius:10px;"
+                      onclick="broadcastSimulatedTransactionBlock('Sui Core Pool Validation Yield Injected')">Stake
+                      Assets</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="token-identity-group"><span class="badge-mono-ticker">SOL Alpha Matrix</span>
+                      High-Velocity Validation Engine</div>
+                  </td>
+                  <td style="color: var(--functional-green); font-family: var(--font-mono); font-weight: 700;">7.14% APY
+                  </td>
+                  <td class="numeric-data">22.40 SOL</td>
+                  <td><button class="btn-action-primary" style="padding: 8px 16px; font-size:12px; border-radius:10px;"
+                      onclick="broadcastSimulatedTransactionBlock('Solana Matrix Pool Allocation Expanded')">Stake
+                      Assets</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="flow-history" class="tab-view-flow">
+          <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 20px; letter-spacing:-0.02em;">Cryptographic
+            Ledger Signatures</h3>
+          <div class="premium-glass-card" style="padding: 0; overflow: hidden;">
+            <table class="quantum-data-table">
+              <thead>
+                <tr>
+                  <th>Method Verification Hash</th>
+                  <th>Operation Call Signature</th>
+                  <th>Execution Parameters Payload</th>
+                  <th>Node State Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-historical-logs-target">
+                <tr>
+                  <td style="font-family: var(--font-mono); color: var(--accent-cyan);">0x9fd2...211a</td>
+                  <td>Smart Pipeline Swap</td>
+                  <td style="font-family: var(--font-mono); font-size:13px;">450.00 SUI ➔ 1,656.00 USDT</td>
+                  <td><span
+                      style="background: rgba(16, 185, 129, 0.12); color: var(--functional-green); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; font-family:var(--font-display);">COMMITTED</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="font-family: var(--font-mono); color: var(--accent-cyan);">0x12e4...84fc</td>
+                  <td>Consensus Inflow Injection</td>
+                  <td style="font-family: var(--font-mono); font-size:13px;">Staked 800.00 SUI</td>
+                  <td><span
+                      style="background: rgba(16, 185, 129, 0.12); color: var(--functional-green); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; font-family:var(--font-display);">COMMITTED</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="right-telemetry-sidebar">
+        <div>
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em;"
+            id="focused-chart-title">Dynamic Telemetry Tracking</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Asset spot value fluctuations
+            mapped real-time.</p>
+
+          <div class="chart-container-panel">
+            <canvas id="telemetryDynamicLineChart" height="240"></canvas>
+          </div>
+        </div>
+
+        <div class="premium-glass-card"
+          style="margin-top: auto; background: rgba(2, 5, 14, 0.4); border-color: rgba(255, 255, 255, 0.03);">
+          <h4
+            style="font-family: var(--font-mono); font-size: 12px; font-weight:600; color: var(--accent-cyan); margin-bottom: 12px; letter-spacing:0.05em;">
+            SYSTEM TELEMETRY ENGINE</h4>
+          <div style="display:flex; justify-content:between; font-size:13px; margin-bottom:8px; width:100%;">
+            <span style="color: var(--text-muted); flex-grow:1;">Sui Network Gas Load</span>
+            <span style="font-family: var(--font-mono); color:#ffffff;">1,980 MIST</span>
+          </div>
+          <div style="display:flex; justify-content:between; font-size:13px; width:100%;">
+            <span style="color: var(--text-muted); flex-grow:1;">Node Protocol Status</span>
+            <span style="font-family: var(--font-mono); color: var(--functional-green);">SECURE_NODE_SYNC_OK</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="modal-viewport-blur-wrapper" id="dispatch-modal">
+    <div class="modal-box-architecture">
+      <button class="modal-dismiss-btn" onclick="triggerModalStateTransition('dispatch-modal', false)">×</button>
+      <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; letter-spacing:-0.02em;">Inject Asset Inflow
+        Signature</h3>
+
+      <label
+        style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display:block; margin-bottom:8px;">TARGET
+        WALLET BLOCK ADDRESS HASH</label>
+      <input type="text" class="search-input-field" style="padding-left: 16px; margin-bottom: 16px;"
+        placeholder="Enter public key destination parameter signature (0x...)">
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <label style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">CAMERA VIEW SCANNER
+          TRANSMISSION</label>
+        <span
+          style="font-size: 11px; color: var(--accent-cyan); font-weight: 700; font-family:var(--font-mono);">OPTICAL_FEED_CONNECTED</span>
+      </div>
+      <div class="cyber-camera-viewport">
+        <div class="laser-scan-line"></div>
+        <div
+          style="color: rgba(6, 182, 212, 0.4); text-align: center; padding-top: 95px; font-size: 12px; font-family: var(--font-mono); letter-spacing: 0.05em;">
+          [SCANNER HARDWARE MATRIX STREAM ACTIVE]
+        </div>
+      </div>
+
+      <button class="btn-action-primary" style="width: 100%;"
+        onclick="broadcastSimulatedTransactionBlock('Asset Injection Sequence Complete')">Sign &amp; Inject Object
+        Payload</button>
+    </div>
+  </div>
+
+  <div class="modal-viewport-blur-wrapper" id="receipt-modal">
+    <div class="modal-box-architecture">
+      <button class="modal-dismiss-btn" onclick="triggerModalStateTransition('receipt-modal', false)">×</button>
+      <h3 style="font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 6px; letter-spacing:-0.02em;">
+        Deposit Gateway QR Matrix</h3>
+      <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 20px;">Scan this
+        cryptography key block to execute native asset transfers.</p>
+
+      <div id="qr-container-target"></div>
+
+      <div
+        style="background: rgba(2,5,15,0.7); border: 1px solid rgba(6, 182, 212, 0.2); padding: 14px; border-radius: 12px; font-family: var(--font-mono); font-size: 12px; text-align: center; word-break: break-all; color: #e2e8f0;">
+        0x12b39f72c184ea059124b88e2563eb38bdf8aa65
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <script>
+    // Engine State Parameters Configuration
+    let coreTokenAssetRegistry = {};
+    let trackedAssetPayloadArray = [];
+    let applicationLineChartInstance = null;
+    let activelySelectedTickerString = 'sui';
+
+    // Mock Vault Quantities Mapped Directly onto Ledger Balance Arrays
+    const systemWalletQuantitiesLedger = {
+      'bitcoin': 0.145,
+      'ethereum': 2.82,
+      'sui': 4250.00,
+      'solana': 84.10,
+      'binancecoin': 4.35,
+      'tether': 1250.00
+    };
+
+    // Global Dynamic Navigation Operational Tab Switches
+    function switchOperationalFlow(targetFlowId) {
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+      document.querySelectorAll('.tab-view-flow').forEach(flow => flow.classList.remove('active-flow'));
+
+      const designatedTriggerButton = document.getElementById(`btn-flow-${targetFlowId}`);
+      if (designatedTriggerButton) designatedTriggerButton.classList.add('active-tab');
+
+      const designatedViewPanel = document.getElementById(`flow-${targetFlowId}`);
+      if (designatedViewPanel) designatedViewPanel.classList.add('active-flow');
+    }
+
+    // Modal Visibility Switch Pipeline Interceptors
+    function triggerModalStateTransition(modalElementId, setAsVisible) {
+      const activeTargetModal = document.getElementById(modalElementId);
+      if (setAsVisible) {
+        activeTargetModal.classList.add('modal-active-state');
+        if (modalElementId === 'receipt-modal') {
+          initializePublicQrVector();
+        }
+      } else {
+        activeTargetModal.classList.remove('modal-active-state');
+      }
+    }
+
+    // Real-Time High-Fidelity API Synchronizer Engine Loop
+    async function executeLivePriceTelemetrySync() {
+      try {
+        const structuralApiIds = 'bitcoin,ethereum,sui,solana,binancecoin,tether';
+        const dynamicEndpointUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${structuralApiIds}&order=market_cap_desc&sparkline=true`;
+
+        const gatewayResponse = await fetch(dynamicEndpointUrl);
+        if (!gatewayResponse.ok) throw new Error("Fallback required due to rate limit constraints.");
+
+        const payloadDataString = await gatewayResponse.json();
+        trackedAssetPayloadArray = payloadDataString;
+
+        payloadDataString.forEach(token => {
+          coreTokenAssetRegistry[token.id] = token;
+        });
+
+        populatePortfolioInterface();
+        populateMarketsInterface();
+        refreshDynamicTechnicalChart();
+        calculateInboundSwapPipeline();
+      } catch (faultVector) {
+        console.warn("[TELEMETRY HUB WARNING] Public nodes congested. Executing precise fallback models.");
+        populateDeterministicFallbackModels();
+      }
+    }
+
+    // High Precision Telemetry Modeling Fallback Structure
+    function populateDeterministicFallbackModels() {
+      const algorithmicMockSnapshots = [
+        { id: 'bitcoin', name: 'Bitcoin Network Core', symbol: 'btc', current_price: 94620.00, price_change_percentage_24h: 1.84, total_volume: 48510000000, image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', sparkline_in_7d: { price: [93100, 93400, 93900, 93600, 94100, 94620] } },
+        { id: 'ethereum', name: 'Ethereum Virtual Machine', symbol: 'eth', current_price: 3145.25, price_change_percentage_24h: -1.12, total_volume: 24150000000, image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', sparkline_in_7d: { price: [3210, 3190, 3180, 3130, 3160, 3145.25] } },
+        { id: 'sui', name: 'Sui Sovereign Core', symbol: 'sui', current_price: 3.74, price_change_percentage_24h: 12.45, total_volume: 1450000000, image: 'https://assets.coingecko.com/coins/images/26375/large/sui_asset.png', sparkline_in_7d: { price: [3.1, 3.25, 3.2, 3.45, 3.6, 3.74] } },
+        { id: 'solana', name: 'Solana High-Velocity Ledger', symbol: 'sol', current_price: 186.40, price_change_percentage_24h: 5.22, total_volume: 9450000000, image: 'https://assets.coingecko.com/coins/images/4128/large/solana.png', sparkline_in_7d: { price: [174, 178, 182, 180, 184, 186.4] } },
+        { id: 'binancecoin', name: 'Binance Ecosystem Token', symbol: 'bnb', current_price: 588.50, price_change_percentage_24h: 0.35, total_volume: 7200000000, image: 'https://assets.coingecko.com/coins/images/825/large/binance-coin-logo.png', sparkline_in_7d: { price: [582, 585, 584, 589, 586, 588.5] } },
+        { id: 'tether', name: 'Tether Dollar Oracle', symbol: 'usdt', current_price: 1.00, price_change_percentage_24h: 0.02, total_volume: 95000000000, image: 'https://assets.coingecko.com/coins/images/325/large/Tether.png', sparkline_in_7d: { price: [1, 1, 1, 1, 1, 1] } }
+      ];
+      trackedAssetPayloadArray = algorithmicMockSnapshots;
+      algorithmicMockSnapshots.forEach(token => { coreTokenAssetRegistry[token.id] = token; });
+      populatePortfolioInterface();
+      populateMarketsInterface();
+      refreshDynamicTechnicalChart();
+      calculateInboundSwapPipeline();
+    }
+
+    // Populate Portfolio Matrix Parameters
+    function populatePortfolioInterface() {
+      const elementBodyTarget = document.getElementById('tbody-portfolio-target');
+      elementBodyTarget.innerHTML = '';
+      let runningValuationSum = 0;
+
+      trackedAssetPayloadArray.forEach(token => {
+        const userHoldingsAmount = systemWalletQuantitiesLedger[token.id] || 0;
+        const totalNetFiatValuation = userHoldingsAmount * token.current_price;
+        runningValuationSum += totalNetFiatValuation;
+
+        const dynamicRow = document.createElement('tr');
+        dynamicRow.setAttribute('onclick', `reTargetTelemetryFocusField('${token.id}')`);
+        dynamicRow.innerHTML = `
+          <td>
+            <div class="token-identity-group">
+              <div class="token-avatar-ring"><img class="token-img-asset" src="${token.image}"></div>
+              <div><strong style="color:#ffffff;">${token.name}</strong> <span class="badge-mono-ticker">${token.symbol.toUpperCase()}</span></div>
+            </div>
+          </td>
+          <td class="numeric-data">$${token.current_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          <td class="numeric-data" style="font-weight:600; color:#ffffff;">${userHoldingsAmount.toLocaleString(undefined, { maximumFractionDigits: 4 })}</td>
+          <td class="numeric-data" style="font-weight:700; color: var(--accent-cyan);">$${totalNetFiatValuation.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+        `;
+        elementBodyTarget.appendChild(dynamicRow);
+      });
+
+      document.getElementById('aggregated-fiat-valuation').textContent = `$${runningValuationSum.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+      const designDeltaNode = document.getElementById('global-portfolio-delta-percentage');
+      designDeltaNode.textContent = `➔ Portfolio Core state validation sequence normalized.`;
+      designDeltaNode.style.color = 'var(--accent-cyan)';
+    }
+
+    // Populate Spot Trading Price Matrices
+    function populateMarketsInterface() {
+      const elementBodyTarget = document.getElementById('tbody-markets-target');
+      elementBodyTarget.innerHTML = '';
+
+      trackedAssetPayloadArray.forEach(token => {
+        const changeDeltaRatio = token.price_change_percentage_24h || 0;
+        const activeColorHex = changeDeltaRatio >= 0 ? 'var(--functional-green)' : 'var(--functional-rose)';
+
+        const dynamicRow = document.createElement('tr');
+        dynamicRow.setAttribute('onclick', `reTargetTelemetryFocusField('${token.id}')`);
+        dynamicRow.innerHTML = `
+          <td>
+            <div class="token-identity-group">
+              <div class="token-avatar-ring"><img class="token-img-asset" src="${token.image}"></div>
+              <div><strong style="color:#ffffff;">${token.name}</strong> <span class="badge-mono-ticker">${token.symbol.toUpperCase()} / USD</span></div>
+            </div>
+          </td>
+          <td class="numeric-data" style="font-weight:700; color:#ffffff;">$${token.current_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          <td class="numeric-data" style="color:${activeColorHex}; font-weight:600;">${changeDeltaRatio >= 0 ? '▲ +' : '▼ '}${changeDeltaRatio.toFixed(2)}%</td>
+          <td class="numeric-data" style="color: var(--text-muted);">$${token.total_volume.toLocaleString()}</td>
+        `;
+        elementBodyTarget.appendChild(dynamicRow);
+      });
+    }
+
+    // Search Query Matrix Filtering Engine Execution
+    function filterActiveTableMatrices(queryInputSelector, destinationTbodySelector) {
+      const calculatedValueString = document.getElementById(queryInputSelector).value.toLowerCase();
+      const lookupRowsArray = document.getElementById(destinationTbodySelector).getElementsByTagName('tr');
+
+      for (let i = 0; i < lookupRowsArray.length; i++) {
+        const stringContentText = lookupRowsArray[i].textContent.toLowerCase();
+        lookupRowsArray[i].style.display = stringContentText.includes(calculatedValueString) ? '' : 'none';
+      }
+    }
+
+    // Focus Shift Handling for Dynamic Chart Engines
+    function reTargetTelemetryFocusField(tokenId) {
+      activelySelectedTickerString = tokenId;
+      document.getElementById('focused-chart-title').textContent = `${coreTokenAssetRegistry[tokenId].name} Track`;
+      refreshDynamicTechnicalChart();
+    }
+
+    // High Fidelity Premium Chart Engine Rendering
+    function refreshDynamicTechnicalChart() {
+      const activelySelectedObject = coreTokenAssetRegistry[activelySelectedTickerString];
+      if (!activelySelectedObject) return;
+
+      let coordinateDataArray = [5, 12, 8, 18, 14, 24];
+      if (activelySelectedObject.sparkline_in_7d && activelySelectedObject.sparkline_in_7d.price) {
+        coordinateDataArray = activelySelectedObject.sparkline_in_7d.price.slice(-24);
+      }
+
+      const generatedTimeLabels = coordinateDataArray.map((_, positionIndex) => `T-${coordinateDataArray.length - positionIndex}h`);
+      const performanceSignIndicator = activelySelectedObject.price_change_percentage_24h >= 0;
+      const coreThemeColorHex = performanceSignIndicator ? '#10b981' : '#f43f5e';
+
+      const canvasRenderingContext = document.getElementById('telemetryDynamicLineChart').getContext('2d');
+
+      if (applicationLineChartInstance) {
+        applicationLineChartInstance.destroy();
+      }
+
+      // Elegant linear area gradient mapping configurations
+      const verticalGradientGlow = canvasRenderingContext.createLinearGradient(0, 0, 0, 220);
+      verticalGradientGlow.addColorStop(0, performanceSignIndicator ? 'rgba(16, 185, 129, 0.16)' : 'rgba(244, 63, 94, 0.16)');
+      verticalGradientGlow.addColorStop(1, 'rgba(4, 6, 16, 0)');
+
+      applicationLineChartInstance = new Chart(canvasRenderingContext, {
+        type: 'line',
+        data: {
+          labels: generatedTimeLabels,
+          datasets: [{
+            data: coordinateDataArray,
+            borderColor: coreThemeColorHex,
+            borderWidth: 2.5,
+            pointRadius: 0,
+            hoverRadius: 4,
+            fill: true,
+            backgroundColor: verticalGradientGlow,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: false },
+            y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } }
+          }
+        }
+      });
+    }
+
+    // Calculate Swap Volume Parameter Metrics
+    function calculateInboundSwapPipeline() {
+      const originalSourceAssetId = document.getElementById('swap-source-asset-select').value;
+      const intendedDestinationAssetId = document.getElementById('swap-target-asset-select').value;
+
+      const numericalAmountInput = parseFloat(document.getElementById('swap-source-qty').value) || 0;
+
+      const sourceAssetObject = coreTokenAssetRegistry[originalSourceAssetId];
+      const targetAssetObject = coreTokenAssetRegistry[intendedDestinationAssetId];
+
+      if (sourceAssetObject && targetAssetObject) {
+        const algorithmicConversionOutput = (numericalAmountInput * sourceAssetObject.current_price) / targetAssetObject.current_price;
+        document.getElementById('swap-target-qty').value = algorithmicConversionOutput.toFixed(6);
+      }
+    }
+
+    function invertSwapAssetParameters() {
+      const sourceMenu = document.getElementById('swap-source-asset-select');
+      const targetMenu = document.getElementById('swap-target-asset-select');
+      const transitoryPlaceholderString = sourceMenu.value;
+
+      sourceMenu.value = targetMenu.value;
+      targetMenu.value = transitoryPlaceholderString;
+      calculateInboundSwapPipeline();
+    }
+
+    // Dynamic QR Generator Matrix Hook
+    function initializePublicQrVector() {
+      const generationTargetZone = document.getElementById('qr-container-target');
+      generationTargetZone.innerHTML = '';
+      new QRCode(generationTargetZone, {
+        text: "sui:0x12b39f72c184ea059124b88e2563eb38bdf8aa65",
+        width: 160,
+        height: 160,
+        colorDark: "#040610",
+        colorLight: "#ffffff"
+      });
+    }
+
+    // Broadcast Simulated Blockchain Action Framework
+    function broadcastSimulatedTransactionBlock(alertDisplayNotificationText) {
+      alert(`[BROADCAST SUCCESS] ${alertDisplayNotificationText}`);
+
+      const destinationAuditContainer = document.getElementById('tbody-historical-logs-target');
+      const interactiveTrNode = document.createElement('tr');
+      const algorithmicGeneratedHash = `0x${Math.random().toString(16).substr(2, 4)}...${Math.random().toString(16).substr(2, 4)}`;
+
+      interactiveTrNode.innerHTML = `
+        <td style="font-family: var(--font-mono); color: var(--accent-cyan);">${algorithmicGeneratedHash}</td>
+        <td>Dynamic Action Broadcast</td>
+        <td>System pipeline consensus sync complete</td>
+        <td><span style="background: rgba(16, 185, 129, 0.12); color: var(--functional-green); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; font-family:var(--font-display);">COMMITTED</span></td>
+      `;
+      destinationAuditContainer.insertBefore(interactiveTrNode, destinationAuditContainer.firstChild);
+
+      document.querySelectorAll('.modal-viewport-blur-wrapper').forEach(modal => modal.classList.remove('modal-active-state'));
+    }
+
+    // Global Bootloader Initialization Hooks
+    window.addEventListener('DOMContentLoaded', () => {
+      executeLivePriceTelemetrySync();
+      // Execute standard intervals for pricing updates
+      setInterval(executeLivePriceTelemetrySync, 20000);
+    });
+  </script>
+</body>
+
+</html>
+
+```

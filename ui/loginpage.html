@@ -470,10 +470,10 @@ Save this entire code snippet as an `.html` file (e.g., `index.html`) and launch
         </button>
 
         <div class="alternative-row">
-          <button class="alternative-btn" onclick="simulateGatewayVerification()">
+          <button class="alternative-btn" onclick="simulateGatewayStatusOnly()">
             Google OAuth
           </button>
-          <button class="alternative-btn" onclick="simulateGatewayVerification()">
+          <button class="alternative-btn" onclick="simulateGatewayStatusOnly()">
             Twitter / X Core
           </button>
         </div>
@@ -633,7 +633,20 @@ Save this entire code snippet as an `.html` file (e.g., `index.html`) and launch
         logger.style.color = "#10b981";
         logger.textContent = "[SUCCESS] Gateway open. Safe developer parameters mapped perfectly.";
         crystalDroplet.material.emissive.setHex(0x10b981);
+        setTimeout(() => {
+          window.location.href = "wallet1.html";
+        }, 450);
       }, 1400);
+    }
+
+    function simulateGatewayStatusOnly() {
+      const logger = document.getElementById('ticker-log-output');
+      const beacon = document.getElementById('ticker-beacon');
+
+      beacon.style.backgroundColor = "#38bdf8";
+      beacon.style.boxShadow = "0 0 10px #38bdf8";
+      logger.style.color = "#38bdf8";
+      logger.textContent = "[AUTH] External identity route reserved for upcoming provider bridge.";
     }
 
     window.addEventListener('DOMContentLoaded', initThreeEngine);

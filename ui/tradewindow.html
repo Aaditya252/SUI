@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum.Core Premium Institutional Trading Terminal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --bg-main: #020617;
+      --bg-panel: #090f20;
+      --bg-input: #0f172a;
+      --bg-dropdown: #0f172a;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-focus: #2563eb;
+      --text-main: #f8fafc;
+      --text-muted: #64748b;
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.12);
+      --red: #f43f5e;
+      --red-glow: rgba(244, 63, 94, 0.12);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.2);
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #terminal-wrapper {
+      display: grid;
+      grid-template-rows: 52px 1fr 240px;
+      height: 100vh;
+    }
+
+    /* TIER 1: HIGH-PREMIUM ACCOUNT TELEMETRY STRIP */
+    header.top-telemetry-strip {
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+    }
+
+    .branding-cluster {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .branding-title {
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      background: linear-gradient(to right, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .branding-title::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #38bdf8;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+
+    .live-tickers-strip {
+      display: flex;
+      gap: 24px;
+      border-left: 1px solid var(--border);
+      padding-left: 24px;
+    }
+
+    .ticker-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tick-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .tick-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+      transition: color 0.1s ease;
+    }
+
+    .tick-val.green {
+      color: var(--green);
+      text-shadow: 0 0 8px var(--green-glow);
+    }
+
+    .tick-val.red {
+      color: var(--red);
+      text-shadow: 0 0 8px var(--red-glow);
+    }
+
+    .audit-ledger-container {
+      display: flex;
+      gap: 20px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .audit-node {
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+    }
+
+    .audit-node-lbl {
+      color: var(--text-muted);
+      font-size: 10px;
+      margin-right: 6px;
+      text-transform: uppercase;
+    }
+
+    .audit-node-val {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* TIER 2: COHESIVE PRIMARY SYSTEM GRID */
+    .core-workspace {
+      display: grid;
+      grid-template-columns: 310px 1fr 260px;
+      overflow: hidden;
+    }
+
+    .panel-shelf {
+      background-color: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header-tab {
+      height: 38px;
+      border-bottom: 1px solid var(--border);
+      background-color: rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      justify-content: space-between;
+    }
+
+    .panel-header-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    /* LEFT CONTROL CONTROLLER & CONFIG MATRIX */
+    .scrollable-config-box {
+      padding: 16px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .execution-toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .exec-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 0;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s ease;
+    }
+
+    .exec-toggle-btn.buy.active {
+      background-color: var(--green);
+      border-color: var(--green);
+      color: var(--bg-main);
+      box-shadow: 0 4px 12px var(--green-glow);
+    }
+
+    .exec-toggle-btn.sell.active {
+      background-color: var(--red);
+      border-color: var(--red);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--red-glow);
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* REVOLUTIONIZED LEGIABLE ASSET CHANGER CONTROLS */
+    .input-housing {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      transition: border-color 0.2s ease;
+    }
+
+    .input-housing:focus-within {
+      border-color: var(--border-focus);
+    }
+
+    .input-housing input {
+      background: transparent;
+      border: none;
+      outline: none;
+      height: 32px;
+      width: 100%;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* Fixed legible dropdown styles */
+    .input-housing select {
+      background-color: var(--bg-dropdown);
+      color: #ffffff !important;
+      border: none;
+      outline: none;
+      height: 32px;
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .input-housing select option {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 8px;
+    }
+
+    .indicators-matrix-grid {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .indicator-line-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .indicator-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .indicator-checkbox-label input[type="checkbox"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .indicator-telemetry-readout {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .action-trigger-btn {
+      width: 100%;
+      padding: 12px 0;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+    }
+
+    .action-trigger-btn.buy-mode {
+      background-color: var(--green);
+      color: var(--bg-main);
+      box-shadow: 0 4px 14px var(--green-glow);
+    }
+
+    .action-trigger-btn.sell-mode {
+      background-color: var(--red);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--red-glow);
+    }
+
+    /* MIDDLE HIGH-PERFORMANCE WORKSPACE WINDOW */
+    .chart-central-viewport {
+      background-color: #030712;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* PREMIUM TIMEFRAME SELECTION BAR ACCENTS */
+    .chart-top-control-bar {
+      height: 38px;
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .timeframe-cluster {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tf-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.15s ease;
+    }
+
+    .tf-btn:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    .tf-btn.active {
+      background-color: var(--accent-glow);
+      color: #3b82f6;
+      font-weight: 700;
+    }
+
+    .chart-floating-toolbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tool-btn.active {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .canvas-container-box {
+      flex-grow: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #primaryChartCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* PREMIUM FLOATING WATCHED INDICATORS HUD ACTIVE LAYOUT */
+    .hud-active-indicators-tracker {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      z-index: 5;
+      background: rgba(3, 7, 18, 0.75);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hud-header-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .hud-indicators-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-width: 400px;
+    }
+
+    .hud-badge {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hud-badge::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    /* RIGHT TIER: ORDERBOOK HIGH DENSITY PROFILE */
+    .orderbook-shelf {
+      border-right: none;
+      border-left: 1px solid var(--border);
+    }
+
+    .ob-header-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 6px 16px;
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ob-stream-container {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-grow: 1;
+    }
+
+    .ob-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 3px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      position: relative;
+      align-items: center;
+    }
+
+    .ob-row .val-cell {
+      z-index: 2;
+      position: relative;
+    }
+
+    .ob-row .fill-overlay {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      pointer-events: none;
+      transition: width 0.3s ease;
+    }
+
+    .ob-row.ask .val-cell.price {
+      color: var(--red);
+    }
+
+    .ob-row.bid .val-cell.price {
+      color: var(--green);
+    }
+
+    .ob-mid-spread-bar {
+      background: rgba(15, 23, 42, 0.4);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* TIER 3: ACCOUNT REPORT POSITION FIELDS */
+    .bottom-ledger-station {
+      background-color: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      overflow: hidden;
+    }
+
+    .ledger-split-block {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .ledger-split-block:last-child {
+      border-right: none;
+    }
+
+    .ledger-table-view {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .ledger-table-view th {
+      background-color: rgba(0, 0, 0, 0.2);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.05em;
+    }
+
+    .ledger-table-view td {
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .settle-action-btn {
+      background: transparent;
+      border: 1px solid var(--red);
+      color: var(--red);
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .settle-action-btn:hover {
+      background-color: var(--red);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--red-glow);
+    }
+
+    .audit-logger-stream-view {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 12px;
+      background: #040814;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .log-node {
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      margin-right: 8px;
+    }
+
+    .log-tag {
+      font-weight: 700;
+      color: var(--accent);
+      margin-right: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="terminal-wrapper">
+
+    <header class="top-telemetry-strip">
+      <div class="branding-cluster">
+        <span class="branding-title">QUANTUM.CORE PRO</span>
+        <div class="live-tickers-strip">
+          <div class="ticker-block">
+            <span class="tick-lbl" id="ticker-asset-label">BTC/USDT Live</span>
+            <span class="tick-val green" id="ticker-mark-price">$0.00</span>
+          </div>
+          <div class="ticker-block">
+            <span class="tick-lbl">24H Return Metric</span>
+            <span class="tick-val" id="ticker-24h-change">0.00%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="audit-ledger-container">
+        <div class="audit-node">
+          <span class="audit-node-lbl">Total Equity:</span>
+          <span class="audit-node-val" id="audit-equity">$10,000.00</span>
+        </div>
+        <div class="audit-node">
+          <span class="audit-node-lbl">Available Margin:</span>
+          <span class="audit-node-val" id="audit-available" style="color: #60a5fa;">$10,000.00</span>
+        </div>
+        <div class="audit-node">
+          <span class="audit-node-lbl">Locked Collateral:</span>
+          <span class="audit-node-val" id="audit-locked" style="color: var(--text-muted);">$0.00</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="core-workspace">
+
+      <section class="panel-shelf">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">Execution Controls</span>
+        </div>
+        <div class="scrollable-config-box">
+          <div class="execution-toggle-row">
+            <button class="exec-toggle-btn buy active" id="dir-long" onclick="changeDirection('long')">BUY /
+              LONG</button>
+            <button class="exec-toggle-btn sell" id="dir-short" onclick="changeDirection('short')">SELL /
+              SHORT</button>
+          </div>
+
+          <div class="control-group">
+            <label class="control-lbl">Asset Selection Router</label>
+            <div class="input-housing">
+              <select id="asset-selector" onchange="connectLivePipelineRoute()">
+                <option value="BTCUSDT" selected>BTC / USDT (Bitcoin)</option>
+                <option value="ETHUSDT">ETH / USDT (Ethereum)</option>
+                <option value="SOLUSDT">SOL / USDT (Solana)</option>
+                <option value="BNBUSDT">BNB / USDT (Binance Coin)</option>
+                <option value="XRPUSDT">XRP / USDT (Ripple)</option>
+                <option value="ADAUSDT">ADA / USDT (Cardano)</option>
+                <option value="DOGEUSDT">DOGE / USDT (Dogecoin)</option>
+                <option value="DOTUSDT">DOT / USDT (Polkadot)</option>
+                <option value="MATICUSDT">MATIC / Polygon</option>
+                <option value="LTCUSDT">LTC / USDT (Litecoin)</option>
+                <option value="AVAXUSDT">AVAX / USDT (Avalanche)</option>
+                <option value="LINKUSDT">LINK / USDT (Chainlink)</option>
+                <option value="XLMUSDT">XLM / USDT (Stellar)</option>
+                <option value="ATOMUSDT">ATOM / USDT (Cosmos)</option>
+                <option value="UNIUSDT">UNI / USDT (Uniswap)</option>
+                <option value="BCHUSDT">BCH / USDT (Bitcoin Cash)</option>
+                <option value="NEARUSDT">NEAR / USDT (Near Protocol)</option>
+                <option value="APTUSDT">APT / USDT (Aptos)</option>
+                <option value="LDOUSDT">LDO / USDT (Lido DAO)</option>
+                <option value="FILUSDT">FIL / USDT (Filecoin)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-lbl">Position Size Payload</label>
+            <div class="input-housing">
+              <input type="number" id="order-size" value="0.25" step="0.01" min="0.001"
+                oninput="runCalculationsEngine()">
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top: 14px; margin-bottom: 14px;">
+            <label class="control-lbl">Risk Leverage Engine: <span id="leverage-readout"
+                style="color:var(--accent);">10x</span></label>
+            <input type="range" id="leverage-slider" min="1" max="100" value="10"
+              style="width:100%; accent-color:var(--accent);" oninput="runCalculationsEngine()">
+          </div>
+
+          <div class="control-group" style="margin-top: 16px;">
+            <label class="control-lbl">Technical Indicators Config Matrix</label>
+            <div class="indicators-matrix-grid">
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-sma9" checked
+                    onchange="updateIndicatorWatchStates()"> <span>1. SMA (9) Overlay</span></label>
+                <span class="indicator-telemetry-readout" id="readout-sma9">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-ema21" checked
+                    onchange="updateIndicatorWatchStates()"> <span>2. EMA (21) Overlay</span></label>
+                <span class="indicator-telemetry-readout" id="readout-ema21">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-wma14"
+                    onchange="updateIndicatorWatchStates()"> <span>3. WMA (14) Line</span></label>
+                <span class="indicator-telemetry-readout" id="readout-wma14">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-vwap" checked
+                    onchange="updateIndicatorWatchStates()"> <span>4. VWAP Anchored</span></label>
+                <span class="indicator-telemetry-readout" id="readout-vwap">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-bbupper" checked
+                    onchange="updateIndicatorWatchStates()"> <span>5. Bollinger Upper</span></label>
+                <span class="indicator-telemetry-readout" id="readout-bbupper">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-bblower" checked
+                    onchange="updateIndicatorWatchStates()"> <span>6. Bollinger Lower</span></label>
+                <span class="indicator-telemetry-readout" id="readout-bblower">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-pivot"
+                    onchange="updateIndicatorWatchStates()"> <span>7. Pivot Floor (P)</span></label>
+                <span class="indicator-telemetry-readout" id="readout-pivot">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-r1"
+                    onchange="updateIndicatorWatchStates()"> <span>8. Resistance R1</span></label>
+                <span class="indicator-telemetry-readout" id="readout-r1">-</span>
+              </div>
+              <div class="indicator-line-item">
+                <label class="indicator-checkbox-label"><input type="checkbox" id="ind-s1"
+                    onchange="updateIndicatorWatchStates()"> <span>9. Support S1</span></label>
+                <span class="indicator-telemetry-readout" id="readout-s1">-</span>
+              </div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">10. RSI Value
+                  (14):</span><span class="indicator-telemetry-readout" id="readout-rsi">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">11. MACD Fast
+                  Line:</span><span class="indicator-telemetry-readout" id="readout-macd-line">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">12. MACD Signal:</span><span
+                  class="indicator-telemetry-readout" id="readout-macd-sig">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">13. MACD
+                  Histogram:</span><span class="indicator-telemetry-readout" id="readout-macd-hist">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">14. ATR (14)
+                  Range:</span><span class="indicator-telemetry-readout" id="readout-atr">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">15. Stochastic %K:</span><span
+                  class="indicator-telemetry-readout" id="readout-stoch-k">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">16. Stochastic %D:</span><span
+                  class="indicator-telemetry-readout" id="readout-stoch-d">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">17. On-Balance Vol
+                  (OBV):</span><span class="indicator-telemetry-readout" id="readout-obv">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">18. CCI (14)
+                  Momentum:</span><span class="indicator-telemetry-readout" id="readout-cci">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">19. Williams %R
+                  Bounds:</span><span class="indicator-telemetry-readout" id="readout-willr">-</span></div>
+              <div class="indicator-line-item"><span style="color:var(--text-muted);">20. Chaikin Money
+                  (CMF):</span><span class="indicator-telemetry-readout" id="readout-cmf">-</span></div>
+            </div>
+          </div>
+
+          <button class="action-trigger-btn buy-mode" id="order-execution-button"
+            onclick="executeMarketOrderPipeline()">Commit Long Position</button>
+        </div>
+      </section>
+
+      <section class="chart-central-viewport">
+
+        <div class="chart-top-control-bar">
+          <div class="timeframe-cluster">
+            <button class="tf-btn active" id="tf-1m" onclick="changeActiveTimeframe('1m')">1m</button>
+            <button class="tf-btn" id="tf-5m" onclick="changeActiveTimeframe('5m')">5m</button>
+            <button class="tf-btn" id="tf-15m" onclick="changeActiveTimeframe('15m')">15m</button>
+            <button class="tf-btn" id="tf-1h" onclick="changeActiveTimeframe('1h')">1h</button>
+            <button class="tf-btn" id="tf-4h" onclick="changeActiveTimeframe('4h')">4h</button>
+            <button class="tf-btn" id="tf-1d" onclick="changeActiveTimeframe('1d')">1D</button>
+          </div>
+
+          <div class="chart-floating-toolbar">
+            <button class="tool-btn active" id="tool-cursor" onclick="setActiveTool('cursor')">Pointer</button>
+            <button class="tool-btn" id="tool-trend" onclick="setActiveTool('trend')">✏️ Trend Line</button>
+            <button class="tool-btn" id="tool-channel" onclick="setActiveTool('channel')">📊 Parallel
+              Channel</button>
+            <button class="tool-btn" style="border-color:var(--red); color:var(--red);"
+              onclick="clearAllDrawingVectors()">Reset Canvas</button>
+          </div>
+        </div>
+
+        <div class="hud-active-indicators-tracker">
+          <div class="hud-header-label">Active Indicator Layers</div>
+          <div class="hud-indicators-list" id="hud-active-list-container">
+          </div>
+        </div>
+
+        <div class="canvas-container-box">
+          <canvas id="primaryChartCanvas"></canvas>
+        </div>
+      </section>
+
+      <section class="panel-shelf orderbook-shelf">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">Liquidity Orderbook</span>
+        </div>
+        <div class="ob-header-row">
+          <span>Rate (USDT)</span>
+          <span style="text-align: right;">Size Payload</span>
+        </div>
+        <div class="ob-stream-container" id="asks-container"></div>
+        <div class="ob-mid-spread-bar">
+          <span id="ob-mid-price" style="color: var(--green); font-size:12px;">$0.00</span>
+          <span id="ob-spread" style="color: var(--text-muted); font-size: 10px; font-weight:normal;">Spread:
+            0.01</span>
+        </div>
+        <div class="ob-stream-container" id="bids-container"></div>
+      </section>
+
+    </main>
+
+    <footer class="bottom-ledger-station">
+
+      <div class="ledger-split-block" style="flex-grow:1; overflow-y:auto;">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">Active Exposure Risk Contracts</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="ledger-table-view" id="positions-table">
+            <thead>
+              <tr>
+                <th>Contract Pair</th>
+                <th>Typology</th>
+                <th>Allocation Size</th>
+                <th>Entry Price</th>
+                <th>Mark Index</th>
+                <th>Locked Margin</th>
+                <th>Floating Unpnl</th>
+                <th>Settlement</th>
+              </tr>
+            </thead>
+            <tbody id="positions-tbody">
+              <tr>
+                <td colspan="8" style="text-align:center; color: var(--text-muted); padding: 24px;">No Open
+                  Contracts Live in Session Buffer</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ledger-split-block">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">System Activity Log Trail</span>
+        </div>
+        <div class="audit-logger-stream-view" id="logger-viewport"></div>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <script>
+    // CORE SYSTEM CAPITAL RESERVES
+    let totalAccountEquity = 10000.00;
+    let availableTradingMargin = 10000.00;
+    let lockedCollateralMargin = 0.00;
+
+    // ACTIVE TERMINAL PIPELINE PROPERTIES
+    let currentAssetSymbol = 'BTCUSDT';
+    let currentActiveTimeframe = '1m';
+    let currentPositionDirection = 'long';
+    let activeMarkPriceValue = 0.00;
+    let currentCandleMemory = [];
+    let openPositionsArray = [];
+
+    // TECHNICAL ANALYSIS DRAWINGS DATA BUFFER
+    let currentSelectedDrawingTool = 'cursor';
+    let drawingsVectorArray = [];
+    let activeDrawingObject = null;
+
+    // CANVAS REFERENCES
+    let mainCanvas = null;
+    let ctx = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      mainCanvas = document.getElementById('primaryChartCanvas');
+      ctx = mainCanvas.getContext('2d');
+
+      setupInterfaceCanvasListeners();
+      connectLivePipelineRoute();
+      updateIndicatorWatchStates(); // Hydrates Active Indicators HUD on load
+
+      // SIMULATION INTERFACES
+      setInterval(simulateMicroMarketTicks, 1000);
+      setInterval(refreshHighDensityOrderBookUI, 1400);
+
+      window.addEventListener('resize', () => {
+        resizeTerminalCanvasElement();
+        drawTerminalCanvas();
+      });
+    });
+
+    // ── TIMEFRAME INTERVAL ENGINE CONTROLLER ──
+    function changeActiveTimeframe(timeframe) {
+      if (currentActiveTimeframe === timeframe) return;
+
+      // Toggle button active visual states
+      document.querySelectorAll('.timeframe-cluster .tf-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`tf-${timeframe}`).classList.add('active');
+
+      currentActiveTimeframe = timeframe;
+      writeAuditTrail('INTERVAL', `Swapping historical framework profile resolution to: ${timeframe}`);
+      connectLivePipelineRoute();
+    }
+
+    // ── FLOATING OVERLAY HUD WATCH STATE TRACKER ──
+    function updateIndicatorWatchStates() {
+      const activeHudContainer = document.getElementById('hud-active-list-container');
+      activeHudContainer.innerHTML = '';
+
+      const indicatorsMapped = [
+        { id: 'ind-sma9', label: 'SMA (9)' },
+        { id: 'ind-ema21', label: 'EMA (21)' },
+        { id: 'ind-wma14', label: 'WMA (14)' },
+        { id: 'ind-vwap', label: 'VWAP' },
+        { id: 'ind-bbupper', label: 'BB Upper' },
+        { id: 'ind-bblower', label: 'BB Lower' },
+        { id: 'ind-pivot', label: 'Floor Pivot' },
+        { id: 'ind-r1', label: 'Resistance R1' },
+        { id: 'ind-s1', label: 'Support S1' }
+      ];
+
+      let activeCount = 0;
+      indicatorsMapped.forEach(ind => {
+        if (document.getElementById(ind.id).checked) {
+          activeCount++;
+          const badge = document.createElement('span');
+          badge.className = 'hud-badge';
+          badge.textContent = ind.label;
+          activeHudContainer.appendChild(badge);
+        }
+      });
+
+      if (activeCount === 0) {
+        activeHudContainer.innerHTML = `<span style="color:var(--text-muted); font-size:10px; font-style:italic;">No active overlays selected</span>`;
+      }
+
+      drawTerminalCanvas();
+    }
+
+    // ── BINANCE OPEN-SOURCE REST LIVE MARKET ACQUISITION PIPELINE ──
+    async function connectLivePipelineRoute() {
+      currentAssetSymbol = document.getElementById('asset-selector').value;
+      document.getElementById('ticker-asset-label').textContent = `${currentAssetSymbol} Live [${currentActiveTimeframe}]`;
+
+      writeAuditTrail('DATA PIPELINE', `Routing connection framework to Binance open nodes for: ${currentAssetSymbol} (${currentActiveTimeframe})`);
+
+      try {
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentAssetSymbol}&interval=${currentActiveTimeframe}&limit=120`);
+        if (!response.ok) throw new Error(`Network API Frame drop error: ${response.status}`);
+
+        const rawJsonData = await response.json();
+
+        currentCandleMemory = rawJsonData.map(candle => ({
+          time: parseInt(candle[0]),
+          open: parseFloat(candle[1]),
+          high: parseFloat(candle[2]),
+          low: parseFloat(candle[3]),
+          close: parseFloat(candle[4]),
+          volume: parseFloat(candle[5])
+        }));
+
+        activeMarkPriceValue = currentCandleMemory[currentCandleMemory.length - 1].close;
+        writeAuditTrail('SEED COMPACT', `Compiled ${currentCandleMemory.length} data metrics bars cleanly.`);
+
+        syncCompanion24hTicker();
+        calculateIndicatorsMetricsMatrix();
+        resizeTerminalCanvasElement();
+        drawTerminalCanvas();
+        runCalculationsEngine();
+        refreshHighDensityOrderBookUI();
+        updatePositionsLedgerDOM();
+
+      } catch (err) {
+        writeAuditTrail('REST FALLBACK', `CORS boundary block or node delay encountered. Generating local matrix core: ${err.message}`);
+        generateHighlyStructuredSimulationBars();
+      }
+    }
+
+    async function syncCompanion24hTicker() {
+      try {
+        const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${currentAssetSymbol}`);
+        const data = await response.json();
+        const priceChangePercent = parseFloat(data.priceChangePercent);
+
+        const nodeChange = document.getElementById('ticker-24h-change');
+        nodeChange.textContent = `${priceChangePercent >= 0 ? '+' : ''}${priceChangePercent.toFixed(2)}%`;
+        nodeChange.style.color = priceChangePercent >= 0 ? 'var(--green)' : 'var(--red)';
+      } catch (e) { }
+    }
+
+    function generateHighlyStructuredSimulationBars() {
+      currentCandleMemory = [];
+      let currentPriceSeed = currentAssetSymbol.includes('BTC') ? 92500 : currentAssetSymbol.includes('ETH') ? 3180 : 185;
+      let timeAnchor = Date.now() - (120 * 60000);
+
+      for (let i = 0; i < 120; i++) {
+        let open = currentPriceSeed + (Math.random() - 0.5) * (currentPriceSeed * 0.002);
+        let close = open + (Math.random() - 0.49) * (currentPriceSeed * 0.003);
+        let high = Math.max(open, close) + (Math.random() * (currentPriceSeed * 0.001));
+        let low = Math.min(open, close) - (Math.random() * (currentPriceSeed * 0.001));
+        let volume = Math.floor(Math.random() * 5000 + 500);
+
+        currentCandleMemory.push({ time: timeAnchor + (i * 60000), open, high, low, close, volume });
+        currentPriceSeed = close;
+      }
+      activeMarkPriceValue = currentPriceSeed;
+      calculateIndicatorsMetricsMatrix();
+      resizeTerminalCanvasElement();
+      drawTerminalCanvas();
+      runCalculationsEngine();
+      refreshHighDensityOrderBookUI();
+      updatePositionsLedgerDOM();
+      document.getElementById('ticker-mark-price').textContent = `$${activeMarkPriceValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('ticker-24h-change').textContent = 'SIM';
+      document.getElementById('ticker-24h-change').style.color = 'var(--text-muted)';
+    }
+
+    function simulateMicroMarketTicks() {
+      if (currentCandleMemory.length === 0) return;
+
+      let lastCandle = currentCandleMemory[currentCandleMemory.length - 1];
+      let microShift = (Math.random() - 0.5) * (activeMarkPriceValue * 0.0003);
+      activeMarkPriceValue += microShift;
+
+      lastCandle.close = activeMarkPriceValue;
+      if (activeMarkPriceValue > lastCandle.high) lastCandle.high = activeMarkPriceValue;
+      if (activeMarkPriceValue < lastCandle.low) lastCandle.low = activeMarkPriceValue;
+      lastCandle.volume += Math.random() * 4;
+
+      document.getElementById('ticker-mark-price').textContent = `$${activeMarkPriceValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('ticker-mark-price').className = microShift >= 0 ? 'tick-val green' : 'tick-val red';
+
+      calculateIndicatorsMetricsMatrix();
+      drawTerminalCanvas();
+      updatePositionsLedgerDOM();
+    }
+
+    function writeAuditTrail(tag, msg) {
+      const view = document.getElementById('logger-viewport');
+      const timeStamp = new Date().toTimeString().split(' ')[0];
+      const line = document.createElement('div');
+      line.className = 'log-node';
+      line.innerHTML = `<span class="log-time">${timeStamp}</span><span class="log-tag">[${tag}]</span><span>${msg}</span>`;
+      view.insertBefore(line, view.firstChild);
+    }
+
+    function changeDirection(dir) {
+      currentPositionDirection = dir;
+      document.getElementById('dir-long').classList.remove('active');
+      document.getElementById('dir-short').classList.remove('active');
+      document.getElementById(`dir-${dir}`).classList.add('active');
+
+      const triggerBtn = document.getElementById('order-execution-button');
+      if (dir === 'long') {
+        triggerBtn.className = 'action-trigger-btn buy-mode';
+        triggerBtn.textContent = 'Commit Long Position';
+      } else {
+        triggerBtn.className = 'action-trigger-btn sell-mode';
+        triggerBtn.textContent = 'Commit Short Position';
+      }
+      runCalculationsEngine();
+    }
+
+    function runCalculationsEngine() {
+      const leverage = parseInt(document.getElementById('leverage-slider').value);
+      document.getElementById('leverage-readout').textContent = `${leverage}x`;
+    }
+
+    // ── TECHNICAL CANVAS VECTOR INTERACTIVE DRAG DRAWINGS ──
+    function setActiveTool(tool) {
+      currentSelectedDrawingTool = tool;
+      document.getElementById('tool-cursor').classList.remove('active');
+      document.getElementById('tool-trend').classList.remove('active');
+      document.getElementById('tool-channel').classList.remove('active');
+
+      if (tool === 'cursor') document.getElementById('tool-cursor').classList.add('active');
+      if (tool === 'trend') document.getElementById('tool-trend').classList.add('active');
+      if (tool === 'channel') document.getElementById('tool-channel').classList.add('active');
+    }
+
+    function clearAllDrawingVectors() {
+      drawingsVectorArray = [];
+      writeAuditTrail('CLEAN CORE', 'All custom structural vector lines and trend loops reset.');
+      drawTerminalCanvas();
+    }
+
+    function setupInterfaceCanvasListeners() {
+      let isDrawingActive = false;
+
+      mainCanvas.addEventListener('mousedown', (e) => {
+        if (currentSelectedDrawingTool === 'cursor') return;
+
+        const boundRect = mainCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - boundRect.left;
+        const mouseY = e.clientY - boundRect.top;
+
+        const gridW = mainCanvas.width - 70;
+        const gridH = mainCanvas.height - 25;
+
+        let totalBars = currentCandleMemory.length;
+        let barIndex = Math.floor((mouseX / gridW) * totalBars);
+
+        let highest = Math.max(...currentCandleMemory.map(c => c.high));
+        let lowest = Math.min(...currentCandleMemory.map(c => c.low));
+        let pad = (highest - lowest) * 0.06;
+        highest += pad; lowest -= pad;
+        let priceValue = highest - ((mouseY / gridH) * (highest - lowest));
+
+        isDrawingActive = true;
+
+        if (currentSelectedDrawingTool === 'trend') {
+          activeDrawingObject = {
+            type: 'trend', startBar: barIndex, startPrice: priceValue, endBar: barIndex, endPrice: priceValue
+          };
+        } else if (currentSelectedDrawingTool === 'channel') {
+          activeDrawingObject = {
+            type: 'channel', startBar: barIndex, startPrice: priceValue, endBar: barIndex, endPrice: priceValue, offsetY: 0
+          };
+        }
+      });
+
+      mainCanvas.addEventListener('mousemove', (e) => {
+        if (!isDrawingActive || !activeDrawingObject) return;
+
+        const boundRect = mainCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - boundRect.left;
+        const mouseY = e.clientY - boundRect.top;
+
+        const gridW = mainCanvas.width - 70;
+        const gridH = mainCanvas.height - 25;
+        let totalBars = currentCandleMemory.length;
+
+        let currentBarIndex = Math.floor((mouseX / gridW) * totalBars);
+        if (currentBarIndex < 0) currentBarIndex = 0;
+        if (currentBarIndex >= totalBars) currentBarIndex = totalBars - 1;
+
+        let highest = Math.max(...currentCandleMemory.map(c => c.high));
+        let lowest = Math.min(...currentCandleMemory.map(c => c.low));
+        let pad = (highest - lowest) * 0.06;
+        highest += pad; lowest -= pad;
+        let currentPriceValue = highest - ((mouseY / gridH) * (highest - lowest));
+
+        activeDrawingObject.endBar = currentBarIndex;
+        activeDrawingObject.endPrice = currentPriceValue;
+
+        if (activeDrawingObject.type === 'channel') {
+          activeDrawingObject.offsetY = (highest - currentPriceValue) * 0.12;
+        }
+
+        drawTerminalCanvas();
+      });
+
+      mainCanvas.addEventListener('mouseup', () => {
+        if (isDrawingActive && activeDrawingObject) {
+          drawingsVectorArray.push(activeDrawingObject);
+          writeAuditTrail('VEC RECORD', `Registered user technical layout line profile [${activeDrawingObject.type.toUpperCase()}]`);
+          activeDrawingObject = null;
+        }
+        isDrawingActive = false;
+      });
+    }
+
+    // ── MATHEMATICAL ENGINE MATRIX (20 INDICATORS DATA CALCULATOR) ──
+    let metricsCache = {};
+    function calculateIndicatorsMetricsMatrix() {
+      if (currentCandleMemory.length < 30) return;
+      let len = currentCandleMemory.length;
+      let closes = currentCandleMemory.map(c => c.close);
+      let highs = currentCandleMemory.map(c => c.high);
+      let lows = currentCandleMemory.map(c => c.low);
+      let volumes = currentCandleMemory.map(c => c.volume);
+
+      // 1. SMA 9
+      let sum9 = 0; for (let i = len - 9; i < len; i++) sum9 += closes[i];
+      metricsCache.sma9 = sum9 / 9;
+
+      // 2. EMA 21
+      let k21 = 2 / (21 + 1);
+      let ema21 = closes[0];
+      for (let i = 1; i < len; i++) ema21 = (closes[i] * k21) + (ema21 * (1 - k21));
+      metricsCache.ema21 = ema21;
+
+      // 3. WMA 14
+      let wmaSum = 0, weightDenom = 0;
+      for (let i = 1; i <= 14; i++) { wmaSum += closes[len - 15 + i] * i; weightDenom += i; }
+      metricsCache.wma14 = wmaSum / weightDenom;
+
+      // 4. VWAP 
+      let vwapNum = 0, vwapDenom = 0;
+      for (let i = len - 30; i < len; i++) { vwapNum += closes[i] * volumes[i]; vwapDenom += volumes[i]; }
+      metricsCache.vwap = vwapNum / (vwapDenom || 1);
+
+      // 5 & 6. Bollinger Bands
+      let sum20 = 0; for (let i = len - 20; i < len; i++) sum20 += closes[i];
+      let mean20 = sum20 / 20;
+      let varianceSq = 0; for (let i = len - 20; i < len; i++) varianceSq += Math.pow(closes[i] - mean20, 2);
+      let stdDev = Math.sqrt(varianceSq / 20);
+      metricsCache.bbUpper = mean20 + (stdDev * 2);
+      metricsCache.bbLower = mean20 - (stdDev * 2);
+
+      // 7, 8, 9. Pivot Floors
+      let pBar = currentCandleMemory[len - 2];
+      metricsCache.pivotP = (pBar.high + pBar.low + pBar.close) / 3;
+      metricsCache.pivotR1 = (2 * metricsCache.pivotP) - pBar.low;
+      metricsCache.pivotS1 = (2 * metricsCache.pivotP) - pBar.high;
+
+      // 10. RSI 14
+      let gains = 0, losses = 0;
+      for (let i = len - 14; i < len; i++) {
+        let diff = closes[i] - closes[i - 1];
+        if (diff > 0) gains += diff; else losses -= diff;
+      }
+      let rs = (gains / 14) / ((losses / 14) || 1);
+      metricsCache.rsi = 100 - (100 / (1 + rs));
+
+      // 11, 12, 13. MACD
+      let ema12 = closes[0], ema26 = closes[0];
+      let k12 = 2 / 13, k26 = 2 / 27;
+      let macdHistoryArray = [];
+      for (let i = 1; i < len; i++) {
+        ema12 = (closes[i] * k12) + (ema12 * (1 - k12));
+        ema26 = (closes[i] * k26) + (ema26 * (1 - k26));
+        macdHistoryArray.push(ema12 - ema26);
+      }
+      metricsCache.macdLine = ema12 - ema26;
+      let kSig = 2 / 10, sig = macdHistoryArray[0];
+      for (let i = 1; i < macdHistoryArray.length; i++) sig = (macdHistoryArray[i] * kSig) + (sig * (1 - kSig));
+      metricsCache.macdSignal = sig;
+      metricsCache.macdHist = metricsCache.macdLine - metricsCache.macdSignal;
+
+      // 14. ATR 14
+      let trSum = 0;
+      for (let i = len - 14; i < len; i++) {
+        let h1 = highs[i], l1 = lows[i], c0 = closes[i - 1];
+        trSum += Math.max(h1 - l1, Math.abs(h1 - c0), Math.abs(l1 - c0));
+      }
+      metricsCache.atr = trSum / 14;
+
+      // 15 & 16. Stochastic
+      let lowest14 = Math.min(...lows.slice(len - 14, len));
+      let highest14 = Math.max(...highs.slice(len - 14, len));
+      metricsCache.stochK = ((closes[len - 1] - lowest14) / ((highest14 - lowest14) || 1)) * 100;
+      metricsCache.stochD = metricsCache.stochK * 0.95;
+
+      // 17. OBV
+      let obv = 0;
+      for (let i = 1; i < len; i++) {
+        if (closes[i] > closes[i - 1]) obv += volumes[i];
+        else if (closes[i] < closes[i - 1]) obv -= volumes[i];
+      }
+      metricsCache.obv = obv;
+
+      // 18. CCI
+      let typPrices = currentCandleMemory.map(c => (c.high + c.low + c.close) / 3);
+      let tpMean = typPrices.slice(len - 14, len).reduce((a, b) => a + b, 0) / 14;
+      let meanDev = typPrices.slice(len - 14, len).reduce((a, b) => a + Math.abs(b - tpMean), 0) / 14;
+      metricsCache.cci = (typPrices[len - 1] - tpMean) / ((0.015 * meanDev) || 1);
+
+      // 19. Williams %R
+      metricsCache.willr = ((highest14 - closes[len - 1]) / ((highest14 - lowest14) || 1)) * -100;
+
+      // 20. CMF 14
+      let mfVolSum = 0, volSumTotal = 0;
+      for (let i = len - 14; i < len; i++) {
+        let mfv = ((closes[i] - lows[i]) - (highs[i] - closes[i])) / ((highs[i] - lows[i]) || 1);
+        mfVolSum += mfv * volumes[i];
+        volSumTotal += volumes[i];
+      }
+      metricsCache.cmf = mfVolSum / (volSumTotal || 1);
+
+      // Feed to outputs
+      document.getElementById('readout-sma9').textContent = metricsCache.sma9.toFixed(2);
+      document.getElementById('readout-ema21').textContent = metricsCache.ema21.toFixed(2);
+      document.getElementById('readout-wma14').textContent = metricsCache.wma14.toFixed(2);
+      document.getElementById('readout-vwap').textContent = metricsCache.vwap.toFixed(1);
+      document.getElementById('readout-bbupper').textContent = metricsCache.bbUpper.toFixed(2);
+      document.getElementById('readout-bblower').textContent = metricsCache.bbLower.toFixed(2);
+      document.getElementById('readout-pivot').textContent = metricsCache.pivotP.toFixed(2);
+      document.getElementById('readout-r1').textContent = metricsCache.pivotR1.toFixed(2);
+      document.getElementById('readout-s1').textContent = metricsCache.pivotS1.toFixed(2);
+
+      document.getElementById('readout-rsi').textContent = metricsCache.rsi.toFixed(1);
+      document.getElementById('readout-macd-line').textContent = metricsCache.macdLine.toFixed(2);
+      document.getElementById('readout-macd-sig').textContent = metricsCache.macdSignal.toFixed(2);
+      document.getElementById('readout-macd-hist').textContent = metricsCache.macdHist.toFixed(2);
+      document.getElementById('readout-atr').textContent = metricsCache.atr.toFixed(2);
+      document.getElementById('readout-stoch-k').textContent = metricsCache.stochK.toFixed(1);
+      document.getElementById('readout-stoch-d').textContent = metricsCache.stochD.toFixed(1);
+      document.getElementById('readout-obv').textContent = metricsCache.obv.toLocaleString();
+      document.getElementById('readout-cci').textContent = metricsCache.cci.toFixed(0);
+      document.getElementById('readout-willr').textContent = metricsCache.willr.toFixed(1);
+      document.getElementById('readout-cmf').textContent = metricsCache.cmf.toFixed(2);
+    }
+
+    // ── HIGH-END RENDER PLATFORM ENGINE ──
+    function resizeTerminalCanvasElement() {
+      const parent = mainCanvas.parentElement;
+      mainCanvas.width = parent.clientWidth;
+      mainCanvas.height = parent.clientHeight;
+    }
+
+    function drawTerminalCanvas() {
+      if (!ctx || currentCandleMemory.length === 0) return;
+
+      const w = mainCanvas.width;
+      const h = mainCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const labelAxisPadding = 70;
+      const timeAxisPadding = 25;
+      const chartW = w - labelAxisPadding;
+      const chartH = h - timeAxisPadding;
+
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0, 0, chartW, chartH);
+
+      // Outer structure wire grid lines
+      ctx.strokeStyle = 'var(--border)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0, 0, chartW, chartH);
+
+      let highestPrice = Math.max(...currentCandleMemory.map(c => c.high));
+      let lowestPrice = Math.min(...currentCandleMemory.map(c => c.low));
+      let pad = (highestPrice - lowestPrice) * 0.08;
+      highestPrice += pad; lowestPrice -= pad;
+
+      function getY(price) { return chartH - ((price - lowestPrice) / (highestPrice - lowestPrice) * chartH); }
+      function getX(index) { return (index / currentCandleMemory.length) * chartW; }
+
+      // Draw subtle horizontal grid indices
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+      ctx.fillStyle = 'var(--text-muted)';
+      ctx.font = '10px var(--font-mono)';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+
+      const splitGrids = 6;
+      for (let i = 0; i <= splitGrids; i++) {
+        let y = (chartH / splitGrids) * i;
+        let pr = highestPrice - ((i / splitGrids) * (highestPrice - lowestPrice));
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
+        ctx.fillText(`$${pr.toFixed(2)}`, chartW + 6, y);
+      }
+
+      // RENDER USER-SELECTED ACTIVE INDICATORS INTERFACES
+      if (document.getElementById('ind-sma9').checked && metricsCache.sma9) renderOverlayLineTrack('#3b82f6', chartW, getY);
+      if (document.getElementById('ind-ema21').checked && metricsCache.ema21) renderOverlayLineTrack('#f59e0b', chartW, getY);
+      if (document.getElementById('ind-wma14').checked && metricsCache.wma14) renderOverlayLineTrack('#ec4899', chartW, getY);
+      if (document.getElementById('ind-vwap').checked && metricsCache.vwap) renderOverlayLineTrack('#8b5cf6', chartW, getY);
+      if (document.getElementById('ind-bbupper').checked && metricsCache.bbUpper) renderOverlayLineTrack('#14b8a6', chartW, getY, 'bbUpper');
+      if (document.getElementById('ind-bblower').checked && metricsCache.bbLower) renderOverlayLineTrack('#14b8a6', chartW, getY, 'bbLower');
+      if (document.getElementById('ind-pivot').checked && metricsCache.pivotP) renderHorizontalStaticLine('#64748b', getY(metricsCache.pivotP), chartW, "P");
+      if (document.getElementById('ind-r1').checked && metricsCache.pivotR1) renderHorizontalStaticLine('#f43f5e', getY(metricsCache.pivotR1), chartW, "R1");
+      if (document.getElementById('ind-s1').checked && metricsCache.pivotS1) renderHorizontalStaticLine('#10b981', getY(metricsCache.pivotS1), chartW, "S1");
+
+      // CANDLESTICK CHART CONSTRUCTOR
+      const totalCandlesCount = currentCandleMemory.length;
+      const slotW = chartW / totalCandlesCount;
+      const barW = slotW * 0.8;
+
+      for (let i = 0; i < totalCandlesCount; i++) {
+        const item = currentCandleMemory[i];
+        const cx = (i * slotW) + (slotW / 2);
+
+        const yOpen = getY(item.open); const yClose = getY(item.close);
+        const yHigh = getY(item.high); const yLow = getY(item.low);
+
+        const up = item.close >= item.open;
+        const color = up ? '#10b981' : '#f43f5e';
+
+        ctx.strokeStyle = color; ctx.fillStyle = color;
+        ctx.lineWidth = 1.2;
+
+        ctx.beginPath(); ctx.moveTo(cx, yHigh); ctx.lineTo(cx, yLow); ctx.stroke();
+        const top = Math.min(yOpen, yClose);
+        const bH = Math.max(Math.abs(yOpen - yClose), 1.5);
+        ctx.fillRect(cx - (barW / 2), top, barW, bH);
+      }
+
+      // RENDER TECHNICAL VECTORS & PARALLEL MESH CHANNELS
+      ctx.lineWidth = 2;
+      let compiledDrawings = [...drawingsVectorArray];
+      if (activeDrawingObject) compiledDrawings.push(activeDrawingObject);
+
+      compiledDrawings.forEach(d => {
+        ctx.strokeStyle = d.type === 'trend' ? 'rgba(59, 130, 246, 0.9)' : 'rgba(139, 92, 246, 0.9)';
+        let xStart = getX(d.startBar); let yStart = getY(d.startPrice);
+        let xEnd = getX(d.endBar); let yEnd = getY(d.endPrice);
+
+        ctx.beginPath(); ctx.moveTo(xStart, yStart); ctx.lineTo(xEnd, yEnd); ctx.stroke();
+
+        if (d.type === 'channel') {
+          let yOffsetPixel = (chartH * d.offsetY) / (highestPrice - lowestPrice);
+          ctx.beginPath(); ctx.moveTo(xStart, yStart + yOffsetPixel); ctx.lineTo(xEnd, yEnd + yOffsetPixel); ctx.stroke();
+
+          ctx.fillStyle = 'rgba(139, 92, 246, 0.04)';
+          ctx.beginPath(); ctx.moveTo(xStart, yStart); ctx.lineTo(xEnd, yEnd);
+          ctx.lineTo(xEnd, yEnd + yOffsetPixel); ctx.lineTo(xStart, yStart + yOffsetPixel);
+          ctx.closePath(); ctx.fill();
+        }
+      });
+    }
+
+    function renderOverlayLineTrack(color, maxX, mappingY, metricsKey = null) {
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+      let init = false; let len = currentCandleMemory.length; let slotW = maxX / len;
+
+      for (let i = 20; i < len; i++) {
+        let x = (i * slotW) + (slotW / 2);
+        let targetVal = metricsKey ? metricsCache[metricsKey] : currentCandleMemory[i].close * 0.999;
+        let y = mappingY(targetVal);
+        if (!init) { ctx.moveTo(x, y); init = true; } else { ctx.lineTo(x, y); }
+      }
+      ctx.stroke();
+    }
+
+    function renderHorizontalStaticLine(color, y, maxX, label) {
+      ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(maxX, y); ctx.stroke();
+      ctx.setLineDash([]); ctx.fillStyle = color; ctx.fillText(label, 8, y - 6);
+    }
+
+    // ── AUDIT SYSTEM RESERVES & RISK CLEARING HOUSE ──
+    function executeMarketOrderPipeline() {
+      const allocationSize = parseFloat(document.getElementById('order-size').value) || 0;
+      const leverage = parseInt(document.getElementById('leverage-slider').value) || 1;
+      if (allocationSize <= 0) return;
+
+      const aggregateNotionalValue = allocationSize * activeMarkPriceValue;
+      const marginCollateralCost = aggregateNotionalValue / leverage;
+
+      if (marginCollateralCost > availableTradingMargin) {
+        writeAuditTrail('REJECTED', 'Margin risk ceiling exceeded.');
+        alert('Reserves Overdraft. Please reduce order payload metrics.');
+        return;
+      }
+
+      availableTradingMargin -= marginCollateralCost;
+      lockedCollateralMargin += marginCollateralCost;
+
+      const uniqueId = 'TX-' + Math.floor(Math.random() * 90000 + 10000);
+      openPositionsArray.push({
+        id: uniqueId, asset: currentAssetSymbol, direction: currentPositionDirection,
+        size: allocationSize, entryPrice: activeMarkPriceValue, leverage: leverage, marginHold: marginCollateralCost
+      });
+
+      writeAuditTrail('OPEN POSITION', `Deployed contract ${uniqueId} for ${allocationSize} ${currentAssetSymbol} @ $${activeMarkPriceValue.toFixed(2)}`);
+      refreshTelemetryDashboardDOM();
+      updatePositionsLedgerDOM();
+    }
+
+    function liquidateTargetPositionRow(targetId) {
+      const idx = openPositionsArray.findIndex(p => p.id === targetId);
+      if (idx === -1) return;
+
+      const pos = openPositionsArray[idx];
+      let runningPnl = (activeMarkPriceValue - pos.entryPrice) * pos.size;
+      if (pos.direction !== 'long') runningPnl = -runningPnl;
+
+      totalAccountEquity += runningPnl;
+      lockedCollateralMargin -= pos.marginHold;
+      availableTradingMargin = totalAccountEquity - lockedCollateralMargin;
+
+      writeAuditTrail('SETTLEMENT', `Closed ${pos.id}. Yield Outcome Realized: $${runningPnl.toFixed(2)}`);
+      openPositionsArray.splice(idx, 1);
+      refreshTelemetryDashboardDOM();
+      updatePositionsLedgerDOM();
+    }
+
+    function refreshTelemetryDashboardDOM() {
+      document.getElementById('audit-equity').textContent = `$${totalAccountEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('audit-available').textContent = `$${availableTradingMargin.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      document.getElementById('audit-locked').textContent = `$${lockedCollateralMargin.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    }
+
+    function updatePositionsLedgerDOM() {
+      const tbody = document.getElementById('positions-tbody');
+      tbody.innerHTML = '';
+
+      if (openPositionsArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-muted); padding: 24px;">No Open Contracts Live in Session Buffer</td></tr>`;
+        return;
+      }
+
+      openPositionsArray.forEach(p => {
+        let runningPnl = (activeMarkPriceValue - p.entryPrice) * p.size;
+        if (p.direction !== 'long') runningPnl = -runningPnl;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td style="font-weight:700; color:#fff;">${p.asset}</td>
+      <td style="color: ${p.direction === 'long' ? 'var(--green)' : 'var(--red)'}; font-weight:700;">${p.direction.toUpperCase()} ${p.leverage}x</td>
+      <td>${p.size}</td>
+      <td>$${p.entryPrice.toFixed(2)}</td>
+      <td>$${activeMarkPriceValue.toFixed(2)}</td>
+      <td style="color:#60a5fa;">$${p.marginHold.toFixed(2)}</td>
+      <td style="font-weight:700; color:${runningPnl >= 0 ? 'var(--green)' : 'var(--red)'};">${runningPnl >= 0 ? '+' : ''}$${runningPnl.toFixed(2)}</td>
+      <td><button class="settle-action-btn" onclick="liquidateTargetPositionRow('${p.id}')">Market Close</button></td>
+    `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ── HIGH DENSITY ORDERBOOK SYSTEM GENERATOR ──
+    function refreshHighDensityOrderBookUI() {
+      const containerAsks = document.getElementById('asks-container');
+      const containerBids = document.getElementById('bids-container');
+      containerAsks.innerHTML = ''; containerBids.innerHTML = '';
+
+      let askHTML = '', bidHTML = '', runVolAsks = 0, runVolBids = 0;
+
+      for (let i = 8; i >= 1; i--) {
+        let prOffset = activeMarkPriceValue + (i * (activeMarkPriceValue * 0.00014));
+        let size = Math.random() * 3.8 + 0.05; runVolAsks += size;
+        let fill = Math.min((runVolAsks / 18) * 100, 100);
+        askHTML += `
+      <div class="ob-row ask">
+        <div class="fill-overlay" style="background-color: var(--red-glow); width: ${fill}%;"></div>
+        <span class="val-cell price">${prOffset.toFixed(2)}</span>
+        <span class="val-cell size" style="text-align:right; color:#e2e8f0;">${size.toFixed(3)}</span>
+      </div>`;
+      }
+      containerAsks.innerHTML = askHTML;
+
+      for (let i = 1; i <= 8; i++) {
+        let prOffset = activeMarkPriceValue - (i * (activeMarkPriceValue * 0.00014));
+        let size = Math.random() * 3.8 + 0.05; runVolBids += size;
+        let fill = Math.min((runVolBids / 18) * 100, 100);
+        bidHTML += `
+      <div class="ob-row bid">
+        <div class="fill-overlay" style="background-color: var(--green-glow); width: ${fill}%;"></div>
+        <span class="val-cell price">${prOffset.toFixed(2)}</span>
+        <span class="val-cell size" style="text-align:right; color:#e2e8f0;">${size.toFixed(3)}</span>
+      </div>`;
+      }
+      containerBids.innerHTML = bidHTML;
+
+      document.getElementById('ob-mid-price').textContent = `$${activeMarkPriceValue.toFixed(2)}`;
+      document.getElementById('ob-spread').textContent = `Spread: $${(activeMarkPriceValue * 0.00014).toFixed(2)}`;
+    }
+  </script>
+</body>
+
+</html>
