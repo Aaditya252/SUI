@@ -322,6 +322,11 @@
       color: #f59e0b;
     }
 
+    .terminal-error {
+      color: #f87171;
+      font-weight: 600;
+    }
+
     /* Console Output Stream Log */
     .console-container {
       height: 152px;
@@ -370,6 +375,11 @@
       color: #f59e0b;
     }
 
+    .log-error {
+      color: #f87171;
+      font-weight: 600;
+    }
+
     .compiler-actions {
       padding: 14px 20px;
       background: rgba(255, 255, 255, 0.02);
@@ -387,6 +397,12 @@
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.58;
+      cursor: wait;
+      transform: none;
     }
 
     .btn-secondary {
@@ -619,7 +635,7 @@
         <div class="terminal-header">Compiler Run Terminal</div>
         <div class="terminal-output" id="terminalOutput">
           <span class="terminal-line terminal-command">$ sui move build --watch</span>
-          <span class="terminal-line">Terminal ready. Run simulation or compile to view output here.</span>
+          <span class="terminal-line">Terminal ready. Compiler status is being checked...</span>
         </div>
       </div>
 
@@ -708,28 +724,37 @@
       atomicRouting: `module fluid_blcx::atomic_asset_router {
     use sui::object::{Self, UID};
     use sui::tx_context::{Self, TxContext};
-    use sui::coin::{Self, Coin};
+    use sui::transfer;
 
-    struct RouteIntent has key, store {
+    public struct RouteIntent has key, store {
         id: UID,
         target_path: address,
-        min_return: u64
+        min_return: u64,
+        source_amount: u64
     }
 
-    public entry fun init_atomic_route<T>(asset: Coin<T>, path: address, min: u64, ctx: &mut TxContext) {
+    const ESlippageTooHigh: u64 = 1;
+
+    entry fun init_atomic_route(path: address, amount: u64, min: u64, ctx: &mut TxContext) {
         let route = RouteIntent {
             id: object::new(ctx),
             target_path: path,
-            min_return: min
+            min_return: min,
+            source_amount: amount
         };
-        // Atomic asset verification logic begins execution paths here
+        transfer::share_object(route);
+    }
+
+    public fun quote_minimum(amount: u64, slippage_bps: u64): u64 {
+        assert!(slippage_bps <= 10000, ESlippageTooHigh);
+        (amount * (10000 - slippage_bps)) / 10000
     }
 }`,
       liquidityPool: `module fluid_blcx::deepbook_liquidity_node {
     use sui::object::{Self, UID};
-    use sui::balance::{Self, Supply, Balance};
+    use sui::balance::Balance;
     
-    struct PoolCore<phantom BaseAsset, phantom QuoteAsset> has key {
+    public struct PoolCore<phantom BaseAsset, phantom QuoteAsset> has key {
         id: UID,
         base_vault: Balance<BaseAsset>,
         quote_vault: Balance<QuoteAsset>,
@@ -737,23 +762,25 @@
     }
 
     // High performance telemetry matching array updates
-    public fun compute_optimal_swap_vector(pool: &PoolCore, amount: u64): u64 {
-        return amount * pool.fee_factor / 10000
+    public fun compute_optimal_swap_vector<BaseAsset, QuoteAsset>(
+        pool: &PoolCore<BaseAsset, QuoteAsset>,
+        amount: u64
+    ): u64 {
+        (amount * pool.fee_factor) / 10000
     }
 }`,
       walrusVault: `module fluid_blcx::walrus_vault_guard {
     use sui::object::{Self, UID};
-    use sui::crypto;
+    use std::vector;
 
-    struct EncryptedVault has key, store {
+    public struct EncryptedVault has key, store {
         id: UID,
         merkle_root_proof: vector<u8>,
         storage_node_index: u64
     }
 
     public fun verify_shard_integrity(vault: &EncryptedVault, challenge: vector<u8>): bool {
-        // High fidelity proof checking architecture across decentralized networks
-        return true
+        vector::length(&vault.merkle_root_proof) > 0 && vector::length(&challenge) > 0
     }
 }`
     };
@@ -765,6 +792,13 @@
     const consoleLogs = document.getElementById('consoleLogs');
     const terminalOutput = document.getElementById('terminalOutput');
     const hoverCard = document.getElementById('hoverCard');
+    const btnSimulate = document.getElementById('btnSimulate');
+    const btnCompile = document.getElementById('btnCompile');
+    const apiBaseUrl = window.location.port === '3000' ? '' : 'http://localhost:3000';
+
+    function apiUrl(path) {
+      return `${apiBaseUrl}${path}`;
+    }
 
     function syncLines() {
       const lines = editor.value.split('\n').length;
@@ -794,9 +828,136 @@
       terminalOutput.scrollTop = terminalOutput.scrollHeight;
     }
 
+    function resetTerminal(commandText) {
+      terminalOutput.innerHTML = '';
+      writeTerminal(commandText, 'command');
+    }
+
+    function classifyCompilerLine(line) {
+      if (line.startsWith('[SUCCESS]')) return 'success';
+      if (line.startsWith('[ERROR]') || line.startsWith('[ERR]')) return 'error';
+      if (line.startsWith('[WARN]')) return 'warning';
+      if (line.startsWith('[OUT]')) return '';
+      return '';
+    }
+
+    function appendCompiledBlock(statusLabel = "COMPILED / LOCAL VALIDATED") {
+      const lastNodePos = blocksArray[blocksArray.length - 1].position;
+      const nextPosition = new THREE.Vector3(
+        lastNodePos.x + 5,
+        (Math.random() - 0.5) * 4,
+        (Math.random() - 0.5) * 3
+      );
+
+      createBlockNode(blocksArray.length, nextPosition);
+      rebuildChainConnections();
+
+      controls.target.copy(nextPosition);
+
+      const freshBlock = blocksArray[blocksArray.length - 1];
+      freshBlock.userData.status = statusLabel;
+      document.getElementById('hudNodeId').textContent = freshBlock.userData.nodeId;
+      document.getElementById('hudParentHash').textContent = freshBlock.userData.parentHash;
+      document.getElementById('hudGasUsed').textContent = freshBlock.userData.gasUsed;
+      document.getElementById('hudStatus').textContent = statusLabel;
+    }
+
+    async function refreshCompilerStatus() {
+      try {
+        const response = await fetch(apiUrl('/api/compiler-status'));
+        const status = await response.json();
+        const type = status.suiAvailable ? 'success' : 'warning';
+        writeTerminal(status.message, type);
+        writeLog(`[COMPILER] ${status.message}`, type);
+      } catch (error) {
+        writeTerminal("Compiler backend offline. Start it with `npm start` from the project root.", 'error');
+        writeLog("[ERROR] Compiler backend offline. Start the Node server before compiling.", 'error');
+      }
+    }
+
+    async function compileEditorSource() {
+      const source = editor.value.trim();
+      if (!source) {
+        writeLog("[ERROR] Compile blocked because the editor is empty.", 'error');
+        resetTerminal("$ fluidblcx compile --source editor");
+        writeTerminal("Source buffer is empty. Write a Sui Move module first.", 'error');
+        return;
+      }
+
+      btnCompile.disabled = true;
+      btnSimulate.disabled = true;
+      resetTerminal("$ fluidblcx compile --source editor --stream");
+      writeLog("[COMPILER] Submitted editor buffer to compiler backend.", 'info');
+
+      try {
+        const response = await fetch(apiUrl('/api/compile-stream'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: 'move', code: editor.value })
+        });
+
+        if (!response.ok || !response.body) {
+          const text = await response.text();
+          throw new Error(text || `Compiler request failed with HTTP ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let finalResult = { success: false, mode: 'unknown' };
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const chunks = buffer.split('\n\n');
+          buffer = chunks.pop() || '';
+
+          chunks.forEach((chunk) => {
+            const line = chunk.replace(/^data:\s?/, '').replace(/\\n/g, '\n').trim();
+            if (!line) return;
+
+            if (line.startsWith('[DONE]')) {
+              const payload = line.replace('[DONE]', '').trim();
+              try {
+                finalResult = JSON.parse(payload);
+              } catch (error) {
+                finalResult = { success: false, mode: 'unknown' };
+              }
+              return;
+            }
+
+            const lineType = classifyCompilerLine(line);
+            writeTerminal(line, lineType);
+            writeLog(line, lineType || 'info');
+          });
+        }
+
+        if (finalResult.success) {
+          const statusLabel = finalResult.mode === 'sui-cli'
+            ? "BYTECODE BUILT / SUI CLI"
+            : "LOCAL VALIDATED / READY FOR SUI CLI";
+          writeTerminal(`Compiler finished successfully in ${finalResult.mode} mode.`, 'success');
+          writeLog(`[SUCCESS] Compiler finished successfully in ${finalResult.mode} mode.`, 'success');
+          appendCompiledBlock(statusLabel);
+        } else {
+          writeTerminal("Compiler stopped. Fix diagnostics above before injecting a block.", 'error');
+          writeLog("[ERROR] Compile failed. Block injection skipped.", 'error');
+        }
+      } catch (error) {
+        writeTerminal(error.message, 'error');
+        writeLog(`[ERROR] ${error.message}`, 'error');
+      } finally {
+        btnCompile.disabled = false;
+        btnSimulate.disabled = false;
+      }
+    }
+
     // Initialize default code setting matrix
     editor.value = templates.atomicRouting;
     syncLines();
+    refreshCompilerStatus();
 
     /* ── HIGH FIDELITY THREE.JS 3D BLOCKCHAIN VISUALIZATION ENGINE ── */
     const container = document.getElementById('three-canvas-container');
@@ -1036,7 +1197,7 @@
     });
 
     /* ── INTERACTION EXECUTION PIPELINES (COMPILING & SIMULATING) ── */
-    document.getElementById('btnSimulate').addEventListener('click', () => {
+    btnSimulate.addEventListener('click', () => {
       writeLog("[COMPILER] Initiating simulation run over transaction graph vector...", 'info');
       writeTerminal("$ sui move test --simulated-telemetry", 'command');
       writeTerminal("Resolving transaction graph vector...");
@@ -1046,45 +1207,7 @@
       }, 700);
     });
 
-    document.getElementById('btnCompile').addEventListener('click', () => {
-      writeLog("[COMPILER] Preparing build pipelines for Sui Move bytecode generator...", 'info');
-      writeTerminal("$ sui move build --dump-bytecode-as-base64", 'command');
-      writeTerminal("Preparing Move source tree...");
-
-      setTimeout(() => {
-        writeLog("[COMPILER] Compiling source tree with optimized cross-chain architecture configuration modules...", 'info');
-        writeTerminal("Compiling modules: fluid_blcx::atomic_asset_router");
-      }, 600);
-
-      setTimeout(() => {
-        writeLog("[SUCCESS] Compilation completely successful! Structural byte arrays generated.", 'success');
-        writeLog("[BLOCKCHAIN] Injecting newly deployed transactional object module to local chain nodes...", 'success');
-        writeTerminal("Build finished successfully.", 'success');
-        writeTerminal("Bytecode generated and block injection request accepted.", 'success');
-
-        // Dynamically append new real physical node in Three.js Scene interface!
-        const lastNodePos = blocksArray[blocksArray.length - 1].position;
-        const nextPosition = new THREE.Vector3(
-          lastNodePos.x + 5,
-          (Math.random() - 0.5) * 4,
-          (Math.random() - 0.5) * 3
-        );
-
-        createBlockNode(blocksArray.length, nextPosition);
-        rebuildChainConnections();
-
-        // Smooth camera focus panning to target new structural block node added
-        controls.target.copy(nextPosition);
-
-        // Auto-update stats panel to reveal newly formed injected object block parameters
-        const freshBlock = blocksArray[blocksArray.length - 1];
-        document.getElementById('hudNodeId').textContent = freshBlock.userData.nodeId;
-        document.getElementById('hudParentHash').textContent = freshBlock.userData.parentHash;
-        document.getElementById('hudGasUsed').textContent = freshBlock.userData.gasUsed;
-        document.getElementById('hudStatus').textContent = "JUST DEPLOYED / MEMPOOL APPROVED";
-
-      }, 1400);
-    });
+    btnCompile.addEventListener('click', compileEditorSource);
 
     // Bootstrap visualizer canvas rendering systems setup immediately
     initThreeVisualizer();
