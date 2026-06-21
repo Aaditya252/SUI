@@ -10,11 +10,11 @@
   "name": "sui",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "api/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "vercel-build": "echo 'Vercel static + serverless deployment ready'"
+    "vercel-build": "echo 'Vercel deployment ready'"
   },
   "repository": {
     "type": "git",
