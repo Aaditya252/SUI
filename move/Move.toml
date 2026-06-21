@@ -1,0 +1,18 @@
+[package]
+name = "fluidblcx_core"
+version = "0.1.0"
+edition = "2024"
+description = "FluidBLCX Core — Zero-trust cryptography, Walrus vault, and risk guardrails for Sui"
+published-at = "0xe4d805346677389d3d36930b77117a0e620cb9d5580fbfd85cd25430aff6d72a"
+
+[addresses]
+sui_agent_ptb = "0x0"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet" }
+
+[devnet-addresses]
+sui_agent_ptb = "0xe4d805346677389d3d36930b77117a0e620cb9d5580fbfd85cd25430aff6d72a"
+
+[devnet-dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet" }

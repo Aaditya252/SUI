@@ -3,111 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Walrus Vault — FluidBLCX</title>
+<title>Walrus Vault — FluidBLCX Decentralized Storage</title>
 <style>
 :root {
-  --bg: #0a0f1e;
-  --surface: #111827;
-  --surface2: #1a2332;
-  --border: #1e293b;
-  --primary: #38bdf8;
-  --accent: #f59e0b;
-  --green: #22c55e;
-  --red: #ef4444;
-  --text: #e2e8f0;
-  --muted: #64748b;
-  --radius: 8px;
+  --bg: #0a0f1e; --surface: #111827; --surface2: #1a2332; --border: #1e293b;
+  --primary: #38bdf8; --accent: #f59e0b; --green: #22c55e; --red: #ef4444;
+  --purple: #a78bfa; --text: #e2e8f0; --muted: #64748b; --radius: 8px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:var(--bg); color:var(--text); font-family:'Inter','Segoe UI',sans-serif; min-height:100vh; }
 header { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
 .logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:-0.5px; }
 .logo svg { flex-shrink:0; }
-.logo span { background:linear-gradient(135deg,var(--primary),#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.logo span { background:linear-gradient(135deg,var(--primary),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 nav { display:flex; gap:4px; }
 nav a { color:var(--muted); text-decoration:none; padding:8px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; transition:all .15s; }
 nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
 .page { max-width:1400px; margin:0 auto; padding:24px 32px; }
 
-/* Stats Grid */
+/* Hero */
+.hero { background:linear-gradient(135deg,rgba(56,189,248,0.05),rgba(167,139,250,0.05)); border:1px solid var(--border); border-radius:12px; padding:32px; margin-bottom:24px; display:flex; align-items:center; gap:24px; }
+.hero-icon { width:60px; height:60px; border-radius:14px; background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(167,139,250,0.15)); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
+.hero-content h1 { font-size:22px; font-weight:700; margin-bottom:4px; }
+.hero-content p { font-size:13px; color:var(--muted); max-width:600px; line-height:1.5; }
+.hero-badge { margin-left:auto; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); padding:6px 14px; border-radius:20px; font-size:11px; color:var(--green); font-weight:600; white-space:nowrap; }
+
+/* Stats */
 .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; }
 .stat-card .label { font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:6px; }
-.stat-card .value { font-size:24px; font-weight:700; color:var(--primary); }
-.stat-card .sub { font-size:12px; color:var(--muted); margin-top:4px; }
+.stat-card .value { font-size:26px; font-weight:700; }
+.stat-card .sub { font-size:11px; color:var(--muted); margin-top:4px; }
+.stat-card.blue .value { color:var(--primary); }
 .stat-card.green .value { color:var(--green); }
 .stat-card.gold .value { color:var(--accent); }
+.stat-card.purple .value { color:var(--purple); }
+.stat-card .mini-icon { position:absolute; bottom:8px; right:10px; font-size:32px; opacity:0.06; pointer-events:none; }
 
-/* Main Layout */
-.main-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
-.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
-.card h3 { font-size:13px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:16px; }
+/* Feature Grid */
+.feature-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:24px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+.card-hdr { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-hdr h3 { font-size:12px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; }
+.card-hdr .badge-pill { font-size:10px; padding:2px 8px; border-radius:4px; background:rgba(56,189,248,0.1); color:var(--primary); }
+.card-body { padding:16px 20px; }
 
 /* Upload Zone */
-.upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:40px; text-align:center; cursor:pointer; transition:all .2s; }
-.upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:rgba(56,189,248,0.05); }
-.upload-zone svg { opacity:0.5; margin-bottom:10px; }
+.upload-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:36px; text-align:center; cursor:pointer; transition:all .2s; }
+.upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:rgba(56,189,248,0.04); }
+.upload-zone .icon { font-size:36px; opacity:0.4; margin-bottom:8px; }
 .upload-zone .hint { font-size:13px; color:var(--muted); }
 .upload-zone .hint strong { color:var(--primary); }
 
-/* File List */
-.file-list { display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; }
-.file-item { display:flex; align-items:center; gap:12px; padding:12px; background:var(--surface2); border-radius:6px; transition:all .15s; }
-.file-item:hover { border-color:var(--border); }
-.file-icon { width:36px; height:36px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-.file-icon.doc { background:rgba(56,189,248,0.15); color:var(--primary); }
-.file-icon.img { background:rgba(34,197,94,0.15); color:var(--green); }
-.file-icon.zip { background:rgba(245,158,11,0.15); color:var(--accent); }
-.file-icon.code { background:rgba(129,140,248,0.15); color:#818cf8; }
-.file-info { flex:1; min-width:0; }
-.file-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.file-meta { font-size:11px; color:var(--muted); }
-.file-status { font-size:11px; padding:3px 8px; border-radius:4px; }
-.file-status.verified { background:rgba(34,197,94,0.15); color:var(--green); }
-.file-status.pending { background:rgba(245,158,11,0.15); color:var(--accent); }
-.file-status.encrypted { background:rgba(56,189,248,0.15); color:var(--primary); }
-.file-actions { display:flex; gap:4px; }
-.file-actions button { background:var(--surface); border:1px solid var(--border); color:var(--muted); padding:6px 10px; border-radius:4px; cursor:pointer; font-size:11px; transition:all .15s; }
-.file-actions button:hover { color:var(--text); border-color:var(--primary); }
-
-/* Blob Explorer */
-.blob-item { display:flex; align-items:center; justify-content:space-between; padding:10px; background:var(--surface2); border-radius:6px; margin-bottom:6px; }
-.blob-id { font-family:'SF Mono','Consolas',monospace; font-size:11px; color:var(--muted); }
-.blob-size { font-size:11px; color:var(--muted); }
-.blob-status { font-size:10px; padding:2px 6px; border-radius:3px; }
-.blob-status.active { background:rgba(34,197,94,0.15); color:var(--green); }
-
-/* Access Control */
-.access-table { width:100%; border-collapse:collapse; }
-.access-table th { text-align:left; font-size:11px; color:var(--muted); padding:8px; border-bottom:1px solid var(--border); }
-.access-table td { padding:8px; font-size:13px; border-bottom:1px solid var(--border); }
-.badge { font-size:10px; padding:2px 6px; border-radius:3px; }
-.badge.admin { background:rgba(245,158,11,0.15); color:var(--accent); }
-.badge.viewer { background:rgba(56,189,248,0.15); color:var(--primary); }
-.badge.owner { background:rgba(34,197,94,0.15); color:var(--green); }
+/* Pipeline */
+.pipeline { display:flex; gap:8px; margin:12px 0; }
+.pipeline-step { flex:1; padding:10px; background:var(--surface2); border-radius:6px; text-align:center; position:relative; }
+.pipeline-step .step-num { font-size:10px; font-weight:700; color:var(--muted); }
+.pipeline-step .step-label { font-size:10px; color:var(--text); margin-top:2px; }
+.pipeline-step.active { border:1px solid var(--primary); background:rgba(56,189,248,0.06); }
+.pipeline-step.done { border:1px solid var(--green); background:rgba(34,197,94,0.06); }
+.pipeline-step.done .step-num { color:var(--green); }
+.pipeline-arrow { display:flex; align-items:center; color:var(--muted); font-size:12px; }
 
 /* Tabs */
-.tabs { display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px; }
-.tab { padding:10px 16px; font-size:13px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.tabs { display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:16px; }
+.tab { padding:10px 16px; font-size:12px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; font-weight:500; }
 .tab.active, .tab:hover { color:var(--text); border-bottom-color:var(--primary); }
 
-/* Toast */
-.toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 20px; font-size:13px; box-shadow:0 10px 40px rgba(0,0,0,0.5); opacity:0; transform:translateY(20px); transition:all .3s; z-index:999; }
-.toast.show { opacity:1; transform:translateY(0); }
+/* File List */
+.file-list { display:flex; flex-direction:column; gap:6px; max-height:380px; overflow-y:auto; }
+.file-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface2); border-radius:6px; transition:all .15s; border:1px solid transparent; }
+.file-item:hover { border-color:var(--border); }
+.file-icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.file-icon.doc { background:rgba(56,189,248,0.12); color:var(--primary); }
+.file-icon.img { background:rgba(34,197,94,0.12); color:var(--green); }
+.file-icon.zip { background:rgba(245,158,11,0.12); color:var(--accent); }
+.file-icon.code { background:rgba(167,139,250,0.12); color:var(--purple); }
+.file-info { flex:1; min-width:0; }
+.file-name { font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-meta { font-size:10px; color:var(--muted); display:flex; gap:8px; }
+.file-status { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; white-space:nowrap; }
+.file-status.encrypted { background:rgba(56,189,248,0.12); color:var(--primary); }
+.file-status.verified { background:rgba(34,197,94,0.12); color:var(--green); }
+.file-status.pending { background:rgba(245,158,11,0.12); color:var(--accent); }
+.file-status.plain { background:rgba(100,116,139,0.12); color:var(--muted); }
+.file-actions { display:flex; gap:4px; }
+.file-actions button { background:var(--surface); border:1px solid var(--border); color:var(--muted); width:28px; height:28px; border-radius:4px; cursor:pointer; font-size:12px; transition:all .15s; display:flex; align-items:center; justify-content:center; }
+.file-actions button:hover { color:var(--text); border-color:var(--primary); background:var(--surface2); }
+.file-actions button.danger:hover { border-color:var(--red); color:var(--red); }
+
+/* Blob Explorer */
+.blob-list { display:flex; flex-direction:column; gap:4px; max-height:340px; overflow-y:auto; }
+.blob-item { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--surface2); border-radius:6px; }
+.blob-id { font-family:'SF Mono','Consolas',monospace; font-size:10px; color:var(--muted); }
+.blob-meta { font-size:10px; color:var(--muted); display:flex; gap:12px; align-items:center; }
+.blob-status { font-size:9px; padding:2px 6px; border-radius:3px; font-weight:600; }
+.blob-status.active { background:rgba(34,197,94,0.12); color:var(--green); }
+.blob-status.certified { background:rgba(56,189,248,0.12); color:var(--primary); }
+.blob-status.encoding { background:rgba(245,158,11,0.12); color:var(--accent); }
+.blob-progress { width:60px; height:4px; background:var(--surface); border-radius:2px; overflow:hidden; }
+.blob-progress .fill { height:100%; background:var(--primary); border-radius:2px; transition:width .5s; }
+
+/* Access Table */
+.access-table { width:100%; border-collapse:collapse; }
+.access-table th { text-align:left; font-size:10px; color:var(--muted); padding:8px 12px; border-bottom:1px solid var(--border); letter-spacing:0.5px; }
+.access-table td { padding:8px 12px; font-size:12px; border-bottom:1px solid var(--border); }
+.badge { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
+.badge.owner { background:rgba(34,197,94,0.12); color:var(--green); }
+.badge.admin { background:rgba(245,158,11,0.12); color:var(--accent); }
+.badge.viewer { background:rgba(56,189,248,0.12); color:var(--primary); }
+
+/* Pricing Calculator */
+.pricing-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pricing-item { background:var(--surface2); border-radius:6px; padding:14px; }
+.pricing-item .rate { font-size:18px; font-weight:700; color:var(--primary); }
+.pricing-item .rate-label { font-size:11px; color:var(--muted); }
+.pricing-item .sub-rate { font-size:11px; color:var(--muted); margin-top:4px; }
+
+/* Upload Queue */
+.upload-queue { margin-top:12px; }
+.queue-item { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--surface2); border-radius:6px; margin-bottom:4px; font-size:12px; }
+.queue-item .progress { flex:1; height:4px; background:var(--surface); border-radius:2px; overflow:hidden; max-width:120px; }
+.queue-item .progress .fill { height:100%; background:var(--primary); border-radius:2px; transition:width .2s; }
 
 /* Empty State */
-.empty { text-align:center; padding:40px; color:var(--muted); }
-.empty svg { opacity:0.3; margin-bottom:12px; }
-.empty p { font-size:14px; }
+.empty { text-align:center; padding:36px; color:var(--muted); }
+.empty .icon { font-size:28px; opacity:0.3; margin-bottom:8px; }
+.empty p { font-size:13px; }
+
+/* Blob Certification */
+.cert-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:3px 8px; border-radius:4px; }
+.cert-badge.poa { background:rgba(34,197,94,0.1); color:var(--green); }
+
+/* Bottom Grid */
+.bottom-grid { display:grid; grid-template-columns:1.5fr 1fr; gap:20px; margin-bottom:24px; }
+
+/* Action Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; border:none; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit; }
+.btn-primary { background:var(--primary); color:#020617; }
+.btn-primary:hover { filter:brightness(1.1); }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-outline:hover { border-color:var(--primary); color:var(--primary); }
+.btn-danger { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:var(--red); }
+.btn-danger:hover { background:rgba(239,68,68,0.2); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 20px; font-size:13px; box-shadow:0 10px 40px rgba(0,0,0,0.6); opacity:0; transform:translateY(20px); transition:all .3s; z-index:999; max-width:400px; }
+.toast.show { opacity:1; transform:translateY(0); }
+
+/* Modal */
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:1000; display:none; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; max-width:480px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal-box h2 { font-size:18px; margin-bottom:8px; }
+.modal-box p { font-size:13px; color:var(--muted); margin-bottom:16px; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
 @media (max-width:1024px) {
   .stats-grid { grid-template-columns:repeat(2,1fr); }
-  .main-grid { grid-template-columns:1fr; }
+  .feature-grid { grid-template-columns:1fr; }
+  .bottom-grid { grid-template-columns:1fr; }
+  .pricing-grid { grid-template-columns:1fr; }
+  .hero { flex-direction:column; text-align:center; }
+  .hero-badge { margin:0; }
 }
 </style>
 </head>
@@ -119,281 +183,590 @@ nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
     <span>WALRUS VAULT</span>
   </div>
   <nav>
-    <a href="/" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">Home</a>
-    <a href="Deepbookv3ui/Deepbookv3.html" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">DeepBook</a>
+    <a href="index.html">Home</a>
+    <a href="Deepbookv3ui/Deepbookv3.html">DeepBook</a>
     <a href="deepbookv3portfolio.html">Portfolio</a>
     <a href="security_dashboard.html">Security</a>
     <a href="walrus_vault.html" class="active">Vault</a>
+    <a href="poison_ai.html">Poison AI</a>
+    <a href="trojan_bots.html">Trojan Bots</a>
   </nav>
 </header>
 
 <div class="page">
 
+<div class="hero">
+  <div class="hero-icon">🗄️</div>
+  <div class="hero-content">
+    <h1>Walrus Decentralized Vault</h1>
+    <p>Enterprise-grade blob storage on the Walrus protocol. Files are encrypted, erasure-coded across 100+ storage nodes, and certified on Sui with Proof-of-Availability guarantees.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+      <input type="password" id="vaultPassphrase" placeholder="Vault passphrase (client-side E2E encryption)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:#fff;font-size:12px;width:280px;font-family:monospace;">
+      <button class="btn btn-primary btn-sm" onclick="unlockVault()" style="padding:6px 12px;font-size:11px;">🔑 Unlock</button>
+      <button class="btn btn-outline btn-sm" onclick="lockVault()" style="padding:6px 12px;font-size:11px;">🔒 Lock</button>
+      <span id="ztStatus" style="font-size:11px;color:var(--muted);">Zero-trust: inactive</span>
+    </div>
+  </div>
+  <div class="hero-badge">▲ <span id="netBlobs">0</span> blobs · <span id="netSize">0 B</span></div>
+</div>
+
 <div class="stats-grid">
-  <div class="stat-card">
+  <div class="stat-card blue">
     <div class="label">Total Files</div>
     <div class="value" id="totalFiles">0</div>
-    <div class="sub">encrypted blobs</div>
+    <div class="sub">encrypted blobs on Walrus</div>
+    <div class="mini-icon">📁</div>
   </div>
   <div class="stat-card green">
     <div class="label">Storage Used</div>
-    <div class="value" id="storageUsed">0 MB</div>
-    <div class="sub">of 1 GB allocated</div>
+    <div class="value" id="storageUsed">0 B</div>
+    <div class="sub">of 1 GB allocated · $<span id="storageCost">0.00</span>/mo</div>
+    <div class="mini-icon">💾</div>
   </div>
   <div class="stat-card gold">
     <div class="label">Active Blobs</div>
     <div class="value" id="activeBlobs">0</div>
-    <div class="sub">on Walrus network</div>
+    <div class="sub"><span id="certifiedBlobs">0</span> certified · <span id="encodingBlobs">0</span> encoding</div>
+    <div class="mini-icon">🔷</div>
   </div>
-  <div class="stat-card">
-    <div class="label">Access Keys</div>
+  <div class="stat-card purple">
+    <div class="label">Seal Access Keys</div>
     <div class="value" id="accessKeys">0</div>
-    <div class="sub">Seal-encrypted</div>
+    <div class="sub">threshold-encrypted policies</div>
+    <div class="mini-icon">🔑</div>
   </div>
 </div>
 
-<div class="main-grid">
+<div class="feature-grid">
   <div class="card">
-    <div class="tabs">
-      <div class="tab active" data-tab="upload">Upload</div>
-      <div class="tab" data-tab="files">Files</div>
+    <div class="card-hdr">
+      <h3>📦 File Manager</h3>
+      <span class="badge-pill">Walrus SDK v1.0</span>
     </div>
-
-    <div id="tab-upload">
-      <div class="upload-zone" id="dropZone">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-        <div class="hint">Drop files here or <strong>browse</strong> to upload</div>
-        <div class="hint" style="margin-top:6px;font-size:11px;">Encrypted with Walrus Seal protocol</div>
-        <input type="file" id="fileInput" multiple style="display:none">
+    <div class="card-body">
+      <div class="tabs">
+        <div class="tab active" data-tab="upload">Upload</div>
+        <div class="tab" data-tab="files">My Files</div>
+        <div class="tab" data-tab="pricing">Pricing</div>
       </div>
-      <div id="uploadQueue" style="margin-top:12px;"></div>
-    </div>
 
-    <div id="tab-files" style="display:none;">
-      <div id="fileListContainer">
-        <div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><p>No files stored yet</p></div>
+      <div id="tab-upload">
+        <div class="upload-zone" id="dropZone">
+          <div class="icon">⬆</div>
+          <div class="hint">Drop files or <strong>browse</strong> to upload to Walrus</div>
+          <div class="hint" style="margin-top:4px;font-size:11px;">Encrypted via Seal · Erasure-coded · Sui-certified</div>
+          <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+        <div class="upload-queue" id="uploadQueue"></div>
+        <div class="pipeline" id="uploadPipeline" style="display:none;">
+          <div class="pipeline-step" id="pipe-register"><div class="step-num">1</div><div class="step-label">Register</div></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" id="pipe-encode"><div class="step-num">2</div><div class="step-label">Encode</div></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" id="pipe-certify"><div class="step-num">3</div><div class="step-label">Certify</div></div>
+          <div class="pipeline-arrow">→</div>
+          <div class="pipeline-step" id="pipe-active"><div class="step-num">4</div><div class="step-label">Active</div></div>
+        </div>
+      </div>
+
+      <div id="tab-files" style="display:none;">
+        <div id="fileListContainer">
+          <div class="empty"><div class="icon">📄</div><p>No files stored. Upload files to encrypt and store on the Walrus network.</p></div>
+        </div>
+      </div>
+
+      <div id="tab-pricing" style="display:none;">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:12px;color:var(--muted);">Estimate monthly cost</label>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input type="number" id="pricingSize" value="100" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:#fff;font-size:13px;width:100px;">
+            <span style="display:flex;align-items:center;font-size:12px;color:var(--muted);">MB</span>
+            <button class="btn btn-primary btn-sm" onclick="estimateCost()">Calculate</button>
+          </div>
+        </div>
+        <div class="pricing-grid">
+          <div class="pricing-item"><div class="rate">$0.023</div><div class="rate-label">per GB / month</div><div class="sub-rate">Walrus storage fee · Paid in WAL</div></div>
+          <div class="pricing-item"><div class="rate" id="estCost">$0.00</div><div class="rate-label">Estimated monthly</div><div class="sub-rate" id="estSize">for 0 GB</div></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h3>Blob Explorer — Walrus Network</h3>
-    <div id="blobList">
-      <div class="empty" id="blobEmpty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><p>No blobs on network</p></div>
+    <div class="card-hdr">
+      <h3>🔷 Blob Explorer</h3>
+      <span class="badge-pill" id="blobCount">0 blobs</span>
+    </div>
+    <div class="card-body">
+      <div class="blob-list" id="blobList">
+        <div class="empty"><div class="icon">🔷</div><p>No blobs stored on Walrus network</p></div>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="card">
-  <h3>Access Control — Seal Encryption</h3>
-  <table class="access-table">
-    <thead><tr><th>Blob ID</th><th>Owner</th><th>Access Level</th><th>Expires</th><th>Status</th></tr></thead>
-    <tbody id="accessTableBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No access rules configured</td></tr></tbody>
-  </table>
+<div class="bottom-grid">
+  <div class="card">
+    <div class="card-hdr">
+      <h3>🔑 Seal Access Control</h3>
+      <span class="badge-pill">Threshold Encryption</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table class="access-table">
+        <thead><tr><th>Blob ID</th><th>Owner</th><th>Access Level</th><th>Expires</th><th>PoA</th></tr></thead>
+        <tbody id="accessTableBody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No access policies configured</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <h3>⚙️ Storage Operations</h3>
+      <span class="badge-pill">Walrus CLI</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="showExtendModal()"><span>🔄</span> Extend Blob Expiry</button>
+        <button class="btn btn-outline btn-sm" onclick="showBurnModal()"><span>🔥</span> Burn Blob Objects</button>
+        <button class="btn btn-outline btn-sm" onclick="refreshVault()"><span>🔄</span> Refresh Network Status</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()"><span>⚠</span> Clear Local Vault</button>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:6px;">
+        <div style="font-size:11px;color:var(--muted);">Walrus Network</div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;">
+          <span>Storage Nodes</span><span style="color:var(--green);">100+ Active</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;">
+          <span>Redundancy</span><span style="color:var(--primary);">2/3 Fault Tolerance</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;">
+          <span>Pricing</span><span style="color:var(--accent);">$0.023/GB/mo</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 </div>
 
 <div class="toast" id="toast"></div>
 
+<div class="modal-overlay" id="extendModal">
+  <div class="modal-box">
+    <h2>🔄 Extend Blob Expiry</h2>
+    <p>Extend the storage duration of a blob on the Walrus network. Each extension adds 30 epochs (~60 days).</p>
+    <div style="margin:12px 0;">
+      <label style="font-size:12px;color:var(--muted);">Blob ID</label>
+      <select id="extendBlobSelect" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:#fff;font-size:12px;margin-top:4px;"></select>
+    </div>
+    <div style="margin:12px 0;">
+      <label style="font-size:12px;color:var(--muted);">Additional epochs</label>
+      <input type="number" id="extendEpochs" value="30" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:#fff;font-size:13px;margin-top:4px;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('extendModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="extendBlob()">Extend</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="burnModal">
+  <div class="modal-box">
+    <h2>🔥 Burn Blob Objects</h2>
+    <p>Burning a Sui blob object reclaims the storage fee. The blob data remains available on Walrus nodes until expiry but can no longer be managed.</p>
+    <div style="margin:12px 0;">
+      <label style="font-size:12px;color:var(--muted);">Select blob to burn</label>
+      <select id="burnBlobSelect" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:#fff;font-size:12px;margin-top:4px;"></select>
+    </div>
+    <p style="font-size:12px;color:var(--red);">⚠ This action reclaims storage fees. The blob object on Sui will be destroyed.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('burnModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="burnBlob()">Burn Blob</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const VAULT_STORAGE_KEY = 'walrusVault';
+const VAULT_KEY = 'walrusVault';
 let vaultData = loadVault();
-let uploadedFiles = [];
 
 function loadVault() {
   try {
-    const raw = localStorage.getItem(VAULT_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { files: [], blobs: [], accessKeys: [] };
-  } catch { return { files: [], blobs: [], accessKeys: [] }; }
+    const raw = localStorage.getItem(VAULT_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d.files && d.blobs && d.accessKeys) return d;
+    }
+  } catch {}
+  return { files: [], blobs: [], accessKeys: [] };
 }
 
 function saveVault() {
-  localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify(vaultData));
-}
-
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
+  localStorage.setItem(VAULT_KEY, JSON.stringify(vaultData));
 }
 
 function generateBlobId() {
-  const hex = '0123456789abcdef';
-  let id = '0x';
-  for (let i = 0; i < 64; i++) id += hex[Math.floor(Math.random() * 16)];
-  return id;
+  return '0x' + Array.from({length:64}, () => '0123456789abcdef'[Math.random()*16|0]).join('');
+}
+
+function formatBytes(b) {
+  if (!b || b === 0) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function getFileIcon(name) {
+  const e = name.split('.').pop().toLowerCase();
+  if (['jpg','jpeg','png','gif','svg','webp','ico'].includes(e)) return { cls:'img', icon:'🖼️' };
+  if (['zip','rar','7z','tar','gz'].includes(e)) return { cls:'zip', icon:'📦' };
+  if (['js','ts','py','html','css','json','sol','move','rs'].includes(e)) return { cls:'code', icon:'📄' };
+  if (['pdf','doc','docx','txt','md'].includes(e)) return { cls:'doc', icon:'📄' };
+  return { cls:'doc', icon:'📄' };
 }
 
 function updateStats() {
   const totalFiles = vaultData.files.length;
-  const totalBytes = vaultData.files.reduce((s, f) => s + (f.size || 0), 0);
-  const activeBlobs = vaultData.blobs.filter(b => b.status === 'active').length;
-  const accessKeys = vaultData.accessKeys.length;
+  const totalBytes = vaultData.files.reduce((s,f) => s+(f.size||0), 0);
+  const activeBlobs = vaultData.blobs.filter(b => b.status==='active'||b.status==='certified').length;
+  const certified = vaultData.blobs.filter(b => b.status==='certified').length;
+  const encoding = vaultData.blobs.filter(b => b.status==='encoding').length;
+  const cost = (totalBytes / 1073741824 * 0.023).toFixed(2);
 
   document.getElementById('totalFiles').textContent = totalFiles;
   document.getElementById('storageUsed').textContent = formatBytes(totalBytes);
+  document.getElementById('storageCost').textContent = cost;
   document.getElementById('activeBlobs').textContent = activeBlobs;
-  document.getElementById('accessKeys').textContent = accessKeys;
-}
-
-function getFileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  if (['jpg','jpeg','png','gif','svg','webp','ico'].includes(ext)) return { cls: 'img', icon: '🖼️' };
-  if (['zip','rar','7z','tar','gz'].includes(ext)) return { cls: 'zip', icon: '📦' };
-  if (['js','ts','py','html','css','json','xml','sol','move'].includes(ext)) return { cls: 'code', icon: '📄' };
-  if (['pdf','doc','docx','txt','md'].includes(ext)) return { cls: 'doc', icon: '📄' };
-  return { cls: 'doc', icon: '📄' };
+  document.getElementById('certifiedBlobs').textContent = certified;
+  document.getElementById('encodingBlobs').textContent = encoding;
+  document.getElementById('accessKeys').textContent = vaultData.accessKeys.length;
+  document.getElementById('netBlobs').textContent = vaultData.blobs.length;
+  document.getElementById('netSize').textContent = formatBytes(totalBytes);
+  document.getElementById('blobCount').textContent = vaultData.blobs.length + ' blobs';
 }
 
 function renderFiles() {
-  const container = document.getElementById('fileListContainer');
-  const tabFiles = document.getElementById('tab-files');
-
+  const c = document.getElementById('fileListContainer');
   if (vaultData.files.length === 0) {
-    container.innerHTML = '<div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><p>No files stored yet</p></div>';
+    c.innerHTML = '<div class="empty"><div class="icon">📄</div><p>No files stored. Upload files to encrypt and store on the Walrus network.</p></div>';
     return;
   }
-
   let html = '<div class="file-list">';
-  vaultData.files.forEach((f, i) => {
+  vaultData.files.forEach((f,i) => {
     const icon = getFileIcon(f.name);
-    const statusClass = f.encrypted ? 'encrypted' : 'verified';
-    const statusText = f.encrypted ? 'Seal-Encrypted' : 'Verified';
-    const size = formatBytes(f.size);
-
-    html += `
-      <div class="file-item">
-        <div class="file-icon ${icon.cls}">${icon.icon}</div>
-        <div class="file-info">
-          <div class="file-name">${f.name}</div>
-          <div class="file-meta">${size} · Blob: ${f.blobId.slice(0, 16)}...</div>
-        </div>
-        <span class="file-status ${statusClass}">${statusText}</span>
-        <div class="file-actions">
-          <button onclick="downloadFile(${i})" title="Download">↓</button>
-          <button onclick="deleteFile(${i})" title="Delete">✕</button>
-        </div>
-      </div>`;
+    let statusClass = 'plain';
+    let statusText = 'Plain';
+    let e2eBadge = '';
+    if (f.e2e) {
+      statusClass = 'encrypted';
+      statusText = 'AES-256-GCM';
+      e2eBadge = '<span class="cert-badge poa" style="font-size:9px;">🔑 E2E</span>';
+    } else if (f.encrypted) {
+      statusClass = 'encrypted';
+      statusText = 'Seal-Encrypted';
+    }
+    const blob = vaultData.blobs.find(b => b.id === f.blobId);
+    const certBadge = blob && blob.status === 'certified' ? '<span class="cert-badge poa">✓ PoA</span>' : '';
+    html += `<div class="file-item">
+      <div class="file-icon ${icon.cls}">${icon.icon}</div>
+      <div class="file-info">
+        <div class="file-name">${f.name}</div>
+        <div class="file-meta"><span>${formatBytes(f.size)}</span><span>Blob: ${f.blobId.slice(0,12)}...</span>${certBadge}${e2eBadge}</div>
+      </div>
+      <span class="file-status ${statusClass}">${statusText}</span>
+      <div class="file-actions">
+        <button onclick="downloadFile(${i})" title="Download">⬇</button>
+        <button onclick="showFileInfo(${i})" title="Details">ℹ</button>
+        <button class="danger" onclick="deleteFile(${i})" title="Delete">✕</button>
+      </div>
+    </div>`;
   });
   html += '</div>';
-  container.innerHTML = html;
+  c.innerHTML = html;
 }
 
 function renderBlobs() {
-  const container = document.getElementById('blobList');
-
+  const c = document.getElementById('blobList');
   if (vaultData.blobs.length === 0) {
-    container.innerHTML = '<div class="empty" id="blobEmpty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><p>No blobs on network</p></div>';
+    c.innerHTML = '<div class="empty"><div class="icon">🔷</div><p>No blobs stored on Walrus network</p></div>';
     return;
   }
-
   let html = '';
-  vaultData.blobs.slice(-10).forEach(b => {
+  vaultData.blobs.slice().reverse().slice(0,15).forEach(b => {
+    const statusClass = b.status === 'certified' ? 'certified' : b.status === 'encoding' ? 'encoding' : 'active';
     const expiry = new Date(b.expires).toLocaleDateString();
-    html += `
-      <div class="blob-item">
-        <div><span class="blob-id">${b.id.slice(0, 20)}...</span></div>
-        <div><span class="blob-size">${formatBytes(b.size)}</span></div>
-        <div><span class="blob-status active">${b.status}</span></div>
-        <div style="font-size:11px;color:var(--muted)">Exp: ${expiry}</div>
-      </div>`;
+    const progress = b.status === 'encoding' ? '40' : b.status === 'certified' ? '100' : '80';
+    html += `<div class="blob-item">
+      <div><span class="blob-id">${b.id.slice(0,18)}...</span></div>
+      <div class="blob-meta">
+        <span>${formatBytes(b.size)}</span>
+        <span>Exp: ${expiry}</span>
+        <span class="blob-status ${statusClass}">${b.status}</span>
+        <div class="blob-progress"><div class="fill" style="width:${progress}%"></div></div>
+      </div>
+    </div>`;
   });
-  container.innerHTML = html;
+  c.innerHTML = html;
 }
 
 function renderAccessTable() {
   const body = document.getElementById('accessTableBody');
   if (vaultData.accessKeys.length === 0) {
-    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No access rules configured</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No access policies configured</td></tr>';
     return;
   }
   let html = '';
-  vaultData.accessKeys.slice(-5).forEach(k => {
+  vaultData.accessKeys.slice().reverse().slice(0,8).forEach(k => {
+    const blob = vaultData.blobs.find(b => b.id === k.blobId);
+    const certBadge = blob && blob.status === 'certified' ? '<span class="cert-badge poa" style="font-size:9px;">✓ PoA</span>' : '<span style="font-size:9px;color:var(--muted);">Pending</span>';
     html += `<tr>
-      <td style="font-family:monospace;font-size:11px;">${k.blobId.slice(0, 20)}...</td>
-      <td style="font-size:12px;">${k.owner}</td>
+      <td style="font-family:monospace;font-size:10px;">${k.blobId.slice(0,16)}...</td>
+      <td style="font-size:11px;">${k.owner}</td>
       <td><span class="badge ${k.level}">${k.level}</span></td>
-      <td style="font-size:12px;">${new Date(k.expires).toLocaleDateString()}</td>
-      <td><span class="file-status verified">Active</span></td>
+      <td style="font-size:11px;">${new Date(k.expires).toLocaleDateString()}</td>
+      <td>${certBadge}</td>
     </tr>`;
   });
   body.innerHTML = html;
 }
 
-function showToast(msg) {
+function showToast(msg, duration) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => t.classList.remove('show'), duration || 3000);
 }
 
-function simulateUpload(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setTimeout(() => {
-        const blobId = generateBlobId();
-        const fileEntry = {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          blobId: blobId,
-          encrypted: true,
-          uploaded: Date.now()
-        };
-        const blobEntry = {
-          id: blobId,
-          size: file.size,
-          status: 'active',
-          created: Date.now(),
-          expires: Date.now() + 30 * 24 * 60 * 60 * 1000
-        };
-        vaultData.files.push(fileEntry);
-        vaultData.blobs.push(blobEntry);
-        vaultData.accessKeys.push({
-          blobId: blobId,
-          owner: '0x' + 'a1b2c3d4e5f6',
-          level: 'owner',
-          expires: Date.now() + 30 * 24 * 60 * 60 * 1000
-        });
-        saveVault();
-        resolve(fileEntry);
-      }, 1500 + Math.random() * 1000);
-    };
-    reader.readAsDataURL(file);
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+// ─── Zero-Trust: Client-Side E2E Encryption (Web Crypto API) ─────────────
+let vaultKey = null;           // AES-GCM key derived from passphrase
+let ztLocked = true;          // vault starts locked
+const encryptedBlobs = new Map(); // blobId → { iv, ciphertext } (in-memory only)
+
+async function unlockVault() {
+  const pw = document.getElementById('vaultPassphrase').value;
+  if (!pw || pw.length < 4) {
+    showToast('Passphrase must be at least 4 characters', 2000);
+    return;
+  }
+  try {
+    const enc = new TextEncoder();
+    const pwKey = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits', 'deriveKey']);
+    const salt = enc.encode('fluidblcx-walrus-vault-2026');
+    vaultKey = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
+      pwKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+    ztLocked = false;
+    document.getElementById('ztStatus').textContent = '✓ Zero-trust: active (AES-256-GCM)';
+    document.getElementById('ztStatus').style.color = 'var(--green)';
+    document.getElementById('vaultPassphrase').style.borderColor = 'var(--green)';
+    showToast('🔓 Vault unlocked — files are encrypted client-side before upload', 3000);
+  } catch (e) {
+    showToast('Crypto error: ' + e.message, 3000);
+  }
+}
+
+async function encryptFileData(arrayBuffer) {
+  if (ztLocked || !vaultKey) return null;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, vaultKey, arrayBuffer);
+  return { iv: Array.from(iv), ciphertext: new Uint8Array(ciphertext) };
+}
+
+async function decryptFileData(encData) {
+  if (ztLocked || !vaultKey) return null;
+  try {
+    const iv = new Uint8Array(encData.iv);
+    const ct = new Uint8Array(encData.ciphertext);
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, vaultKey, ct);
+    return plaintext;
+  } catch (e) {
+    console.error('Decryption failed:', e.message);
+    return null;
+  }
+}
+
+function lockVault() {
+  vaultKey = null;
+  ztLocked = true;
+  encryptedBlobs.clear();
+  document.getElementById('ztStatus').textContent = 'Zero-trust: inactive';
+  document.getElementById('ztStatus').style.color = 'var(--muted)';
+  document.getElementById('vaultPassphrase').style.borderColor = 'var(--border)';
+  document.getElementById('vaultPassphrase').value = '';
+}
+// ─── End E2E Encryption ───────────────────────────────────────────────────
+
+// --- Upload Pipeline ---
+async function uploadFile(file) {
+  const queue = document.getElementById('uploadQueue');
+  const pipeline = document.getElementById('uploadPipeline');
+  pipeline.style.display = 'flex';
+
+  const row = document.createElement('div');
+  row.className = 'queue-item';
+  row.innerHTML = `<span>📄 ${file.name}</span><div class="progress"><div class="fill" style="width:0%"></div></div><span style="font-size:10px;color:var(--muted);">Starting...</span>`;
+  queue.appendChild(row);
+
+  const pipeSteps = ['pipe-register','pipe-encode','pipe-certify','pipe-active'];
+  const updatePipeline = (idx) => {
+    pipeSteps.forEach((id,i) => {
+      const el = document.getElementById(id);
+      el.classList.remove('done','active');
+      if (i < idx) el.classList.add('done');
+      else if (i === idx) el.classList.add('active');
+    });
+  };
+
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  // Step 0: Read file & client-side encrypt (AES-256-GCM via Web Crypto)
+  row.querySelector('span:last-child').textContent = 'Reading file...';
+  const fileBuf = await file.arrayBuffer();
+  let encData = null;
+  if (!ztLocked && vaultKey) {
+    row.querySelector('span:last-child').textContent = 'Encrypting client-side (AES-256-GCM)...';
+    await delay(200 + Math.random() * 200);
+    encData = await encryptFileData(fileBuf);
+    if (encData) {
+      encryptedBlobs.set('pending', encData);
+      row.querySelector('span:last-child').textContent = '✓ Client-side encrypted';
+    }
+  } else {
+    row.querySelector('span:last-child').textContent = 'No passphrase — using simulated encryption';
+  }
+  await delay(200);
+
+  // Step 1: Register blob on Sui
+  row.querySelector('.fill').style.width = '15%';
+  row.querySelector('span:last-child').textContent = 'Registering on Sui...';
+  updatePipeline(0);
+  await delay(400 + Math.random() * 300);
+
+  // Step 2: Encode with Red Stuff erasure coding
+  row.querySelector('.fill').style.width = '40%';
+  row.querySelector('span:last-child').textContent = 'Erasure encoding...';
+  updatePipeline(1);
+  await delay(500 + Math.random() * 400);
+
+  // Step 3: Distribute to storage nodes + certify
+  row.querySelector('.fill').style.width = '70%';
+  row.querySelector('span:last-child').textContent = 'Distributing to 100+ nodes...';
+  updatePipeline(2);
+  await delay(500 + Math.random() * 300);
+
+  // Step 4: Active + PoA certificate
+  row.querySelector('.fill').style.width = '100%';
+  row.querySelector('span:last-child').textContent = '✓ Certified on Sui';
+  updatePipeline(3);
+
+  const blobId = generateBlobId();
+  if (encData) {
+    encryptedBlobs.delete('pending');
+    encData.blobId = blobId;
+    encryptedBlobs.set(blobId, encData);
+  }
+  const fileEntry = {
+    id: Date.now() + Math.random(),
+    name: file.name, size: file.size, type: file.type,
+    blobId: blobId, encrypted: !ztLocked && vaultKey !== null, uploaded: Date.now(),
+    e2e: !!encData
+  };
+  const blobEntry = {
+    id: blobId, size: file.size,
+    status: 'certified',
+    created: Date.now(),
+    expires: Date.now() + 60 * 24 * 60 * 60 * 1000
+  };
+  vaultData.files.push(fileEntry);
+  vaultData.blobs.push(blobEntry);
+  vaultData.accessKeys.push({
+    blobId: blobId,
+    owner: '0x' + 'a1b2c3d4e5f6' + Math.random().toString(16).slice(2,8),
+    level: 'owner',
+    expires: Date.now() + 60 * 24 * 60 * 60 * 1000
   });
+  saveVault();
+
+  setTimeout(() => { row.querySelector('span:last-child').textContent = '✓ Stored'; row.style.opacity = '0.6'; }, 300);
+  setTimeout(() => { if (queue.children.length === 0) pipeline.style.display = 'none'; }, 2000);
 }
 
 async function handleFiles(files) {
-  const queue = document.getElementById('uploadQueue');
-  for (const file of files) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border-radius:6px;margin-top:6px;font-size:13px;';
-    row.innerHTML = `<span>📄 ${file.name}</span><span style="flex:1;"></span><span style="color:var(--muted)">Encrypting & storing...</span>`;
-    queue.appendChild(row);
-    await simulateUpload(file);
-    row.innerHTML = `<span>📄 ${file.name}</span><span style="flex:1;"></span><span style="color:var(--green)">✓ Stored on Walrus network</span>`;
-  }
-  setTimeout(() => queue.innerHTML = '', 2000);
+  for (const file of files) await uploadFile(file);
   updateStats();
   renderFiles();
   renderBlobs();
   renderAccessTable();
-  showToast(`Stored ${files.length} file(s) on Walrus network`);
+  showToast(`Stored ${files.length} file(s) on Walrus network`, 4000);
 }
 
+// --- File Actions ---
 function downloadFile(index) {
   const f = vaultData.files[index];
   if (!f) return;
-  showToast(`Decrypting "${f.name}" via Seal protocol...`);
-  setTimeout(() => showToast(`"${f.name}" decrypted and ready`), 1000);
+  const blob = vaultData.blobs.find(b => b.id === f.blobId);
+  const status = blob ? blob.status : 'unknown';
+
+  if (f.e2e) {
+    // Real E2E decryption
+    showToast(`🔓 Decrypting "${f.name}" with client-side AES-256-GCM...`, 3000);
+    const enc = encryptedBlobs.get(f.blobId);
+    if (!enc || !enc.iv) {
+      showToast('⚠ Encrypted blob data not in session — re-upload from the unlocked vault', 4000);
+      return;
+    }
+    decryptFileData(enc).then(plaintext => {
+      if (!plaintext) {
+        showToast('❌ Decryption failed — wrong passphrase or corrupted data', 4000);
+        return;
+      }
+      const mime = f.type || 'application/octet-stream';
+      const blobObj = new Blob([plaintext], { type: mime });
+      const url = URL.createObjectURL(blobObj);
+      const a = document.createElement('a');
+      a.href = url; a.download = f.name;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      showToast(`✓ "${f.name}" decrypted (AES-256-GCM) · PoA: ${status === 'certified' ? '✓' : 'pending'}`, 4000);
+    });
+  } else {
+    // Simulated download (backward compatible)
+    showToast(`🔓 Decrypting "${f.name}" via Seal threshold protocol...`, 2000);
+    setTimeout(() => {
+      if (status === 'certified') {
+        showToast(`✓ "${f.name}" decrypted · PoA verified · Ready for download`, 4000);
+      } else {
+        showToast(`⚠ "${f.name}" decrypted but PoA not yet certified`, 3000);
+      }
+    }, 1200);
+  }
+}
+
+function showFileInfo(index) {
+  const f = vaultData.files[index];
+  if (!f) return;
+  const blob = vaultData.blobs.find(b => b.id === f.blobId);
+  showToast(`📄 ${f.name} · ${formatBytes(f.size)} · ID: ${f.blobId.slice(0,20)}... · Status: ${blob ? blob.status : 'unknown'} · Encrypted: ${f.encrypted ? 'Yes (Seal)' : 'No'}`, 5000);
 }
 
 function deleteFile(index) {
   const f = vaultData.files[index];
   if (!f || !confirm(`Delete "${f.name}" from Walrus network?`)) return;
+  encryptedBlobs.delete(f.blobId);
   vaultData.files.splice(index, 1);
   vaultData.blobs = vaultData.blobs.filter(b => b.id !== f.blobId);
   vaultData.accessKeys = vaultData.accessKeys.filter(a => a.blobId !== f.blobId);
@@ -402,22 +775,110 @@ function deleteFile(index) {
   renderFiles();
   renderBlobs();
   renderAccessTable();
-  showToast(`"${f.name}" deleted from Walrus network`);
+  showToast(`🗑 "${f.name}" deleted from Walrus network`);
 }
 
-// --- Event Handlers ---
+// --- Pricing ---
+function estimateCost() {
+  const mb = parseFloat(document.getElementById('pricingSize').value) || 0;
+  const gb = mb / 1024;
+  const cost = gb * 0.023;
+  document.getElementById('estCost').textContent = '$' + cost.toFixed(4);
+  document.getElementById('estSize').textContent = 'for ' + gb.toFixed(2) + ' GB';
+}
+
+// --- Extend & Burn ---
+function populateBlobSelects() {
+  const extSel = document.getElementById('extendBlobSelect');
+  const burnSel = document.getElementById('burnBlobSelect');
+  extSel.innerHTML = '';
+  burnSel.innerHTML = '';
+  vaultData.blobs.forEach(b => {
+    const opt1 = document.createElement('option');
+    opt1.value = b.id;
+    opt1.textContent = b.id.slice(0,20) + '... (' + formatBytes(b.size) + ')';
+    extSel.appendChild(opt1);
+    const opt2 = opt1.cloneNode(true);
+    burnSel.appendChild(opt2);
+  });
+}
+
+function showExtendModal() {
+  populateBlobSelects();
+  openModal('extendModal');
+}
+
+function showBurnModal() {
+  populateBlobSelects();
+  openModal('burnModal');
+}
+
+function extendBlob() {
+  const blobId = document.getElementById('extendBlobSelect').value;
+  const epochs = parseInt(document.getElementById('extendEpochs').value) || 30;
+  const blob = vaultData.blobs.find(b => b.id === blobId);
+  if (!blob) return;
+  blob.expires += epochs * 2 * 24 * 60 * 60 * 1000;
+  saveVault();
+  closeModal('extendModal');
+  updateStats();
+  renderBlobs();
+  renderAccessTable();
+  showToast(`🔄 Blob extended by ${epochs} epochs`);
+}
+
+function burnBlob() {
+  const blobId = document.getElementById('burnBlobSelect').value;
+  const blob = vaultData.blobs.find(b => b.id === blobId);
+  if (!blob) return;
+  blob.status = 'burned';
+  blob.burnedAt = Date.now();
+  encryptedBlobs.delete(blobId);
+  vaultData.files = vaultData.files.filter(f => f.blobId !== blobId);
+  vaultData.accessKeys = vaultData.accessKeys.filter(a => a.blobId !== blobId);
+  saveVault();
+  closeModal('burnModal');
+  updateStats();
+  renderFiles();
+  renderBlobs();
+  renderAccessTable();
+  showToast(`🔥 Blob ${blobId.slice(0,12)}... burned · Storage fee reclaimed`);
+}
+
+function refreshVault() {
+  updateStats();
+  renderFiles();
+  renderBlobs();
+  renderAccessTable();
+  showToast('🔄 Walrus network status refreshed', 1500);
+}
+
+function clearAllData() {
+  if (!confirm('Clear all local vault data? This does not affect blobs already on the Walrus network.')) return;
+  vaultData = { files: [], blobs: [], accessKeys: [] };
+  encryptedBlobs.clear();
+  saveVault();
+  updateStats();
+  renderFiles();
+  renderBlobs();
+  renderAccessTable();
+  showToast('Local vault cleared');
+}
+
+// --- Tab Switching ---
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab-upload').style.display = tab.dataset.tab === 'upload' ? '' : 'none';
     document.getElementById('tab-files').style.display = tab.dataset.tab === 'files' ? '' : 'none';
+    document.getElementById('tab-pricing').style.display = tab.dataset.tab === 'pricing' ? '' : 'none';
   });
 });
 
+// --- Upload Events ---
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
-
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -431,21 +892,14 @@ fileInput.addEventListener('change', () => {
   fileInput.value = '';
 });
 
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
-    e.preventDefault();
-    fileInput.click();
-  }
-});
-
 // --- Init ---
 (function init() {
   updateStats();
   renderFiles();
   renderBlobs();
   renderAccessTable();
+  estimateCost();
 })();
-
 </script>
 </body>
 </html>

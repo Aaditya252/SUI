@@ -87,6 +87,18 @@ nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
 .model-item .ml-value { font-size:20px; font-weight:700; color:var(--primary); }
 .model-item .ml-label { font-size:11px; color:var(--muted); margin-top:4px; }
 
+/* Zero-Trust Crypto Card */
+.zt-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.zt-item { background:var(--surface2); border-radius:6px; padding:12px; text-align:center; border:1px solid transparent; }
+.zt-item .zt-value { font-size:18px; font-weight:700; font-family:'SF Mono','Consolas',monospace; }
+.zt-item .zt-label { font-size:11px; color:var(--muted); margin-top:4px; }
+.zt-item.active { border-color:rgba(34,197,94,0.3); }
+.zt-item.active .zt-value { color:var(--green); }
+.zt-item.inactive { border-color:rgba(239,68,68,0.2); }
+.zt-item.inactive .zt-value { color:var(--red); }
+.zt-pubkey { font-family:'SF Mono','Consolas',monospace; font-size:10px; color:var(--muted); word-break:break-all; margin-top:8px; padding:8px; background:var(--bg); border-radius:4px; max-height:40px; overflow:hidden; line-height:1.4; cursor:pointer; }
+.zt-pubkey:hover { max-height:120px; }
+
 /* IP Block List */
 .ip-block-item { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--surface2); border-radius:6px; margin-bottom:6px; font-size:13px; }
 .ip-block-item .ip { font-family:'SF Mono','Consolas',monospace; font-size:12px; }
@@ -124,11 +136,13 @@ nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
     <span>AI SECURITY SHIELD</span>
   </div>
   <nav>
-    <a href="/" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">Home</a>
+    <a href="index.html" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">Home</a>
     <a href="Deepbookv3ui/Deepbookv3.html" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">DeepBook</a>
     <a href="deepbookv3portfolio.html">Portfolio</a>
     <a href="security_dashboard.html" class="active">Security</a>
     <a href="walrus_vault.html">Vault</a>
+    <a href="poison_ai.html">Poison AI</a>
+    <a href="trojan_bots.html">Trojan Bots</a>
   </nav>
 </header>
 
@@ -199,6 +213,17 @@ nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
   <div class="anomaly-bar" id="anomalyChart"></div>
 </div>
 
+<div class="model-card" id="ztCard">
+  <h3>🔐 Zero-Trust Cryptography — Ed25519 Signing + HMAC + Token Auth</h3>
+  <div class="zt-grid">
+    <div class="zt-item" id="ztResponseSigning"><div class="zt-value">—</div><div class="zt-label">Response Signing</div></div>
+    <div class="zt-item" id="ztHMAC"><div class="zt-value">—</div><div class="zt-label">Inter-Service HMAC</div></div>
+    <div class="zt-item" id="ztTokenAuth"><div class="zt-value">—</div><div class="zt-label">Token Auth</div></div>
+    <div class="zt-item" id="ztActiveTokens"><div class="zt-value">—</div><div class="zt-label">Active Tokens</div></div>
+  </div>
+  <div class="zt-pubkey" id="ztPublicKey" title="Click to expand — Server Ed25519 public key">Fetching server public key...</div>
+</div>
+
 <div class="bottom-grid">
   <div class="card">
     <h3>🚫 Blocked IPs</h3>
@@ -223,6 +248,8 @@ nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
 
 <script>
 const AI_ENGINE = 'http://localhost:5001';
+const NODE_HOST = (window.location.port === '5501' || window.location.port === '5500')
+  ? 'http://127.0.0.1:3000' : '';
 
 let threatHistory = [];
 
@@ -307,7 +334,8 @@ async function fetchSecurityStatus() {
     document.getElementById('modelTrained').textContent = data.ml_model.trained ? 'Trained ✓' : 'Learning...';
     document.getElementById('contaminationRate').textContent = (data.ml_model.contamination * 100) + '%';
     document.getElementById('estimators').textContent = data.ml_model.estimators;
-    document.getElementById('total_threats_blocked').textContent = data.total_threats_blocked;
+    const ttb = document.getElementById('total_threats_blocked');
+    if (ttb) ttb.textContent = data.total_threats_blocked;
 
     document.getElementById('myIP').textContent = data.ip;
     document.getElementById('rateLimitStatus').textContent = `${data.rate_limit.current_count} / ${data.rate_limit.max_allowed} requests`;
@@ -345,10 +373,56 @@ async function fetchBlockedIPs() {
   }
 }
 
+async function fetchZeroTrustStatus() {
+  try {
+    const resp = await fetch(NODE_HOST + '/api/zt/status');
+    const data = await resp.json();
+    if (data.success) {
+      const rs = document.getElementById('ztResponseSigning');
+      rs.className = 'zt-item ' + (data.responseSigning.active ? 'active' : 'inactive');
+      rs.querySelector('.zt-value').textContent = data.responseSigning.active ? '✓ Ed25519' : '✗ Off';
+
+      const hm = document.getElementById('ztHMAC');
+      hm.className = 'zt-item ' + (data.hmacInterService.active ? 'active' : 'inactive');
+      hm.querySelector('.zt-value').textContent = data.hmacInterService.active ? '✓ SHA-256' : '✗ Off';
+
+      const ta = document.getElementById('ztTokenAuth');
+      ta.className = 'zt-item ' + (data.tokenAuth.active ? 'active' : 'inactive');
+      ta.querySelector('.zt-value').textContent = data.tokenAuth.active ? '✓ Active' : '✗ Off';
+
+      document.getElementById('ztActiveTokens').querySelector('.zt-value').textContent = data.tokenAuth.activeTokens;
+    }
+    return data;
+  } catch {
+    ['ztResponseSigning','ztHMAC','ztTokenAuth'].forEach(id => {
+      const el = document.getElementById(id);
+      el.className = 'zt-item inactive';
+      el.querySelector('.zt-value').textContent = '⚠ Unreachable';
+    });
+    return null;
+  }
+}
+
+async function fetchPublicKey() {
+  try {
+    const resp = await fetch(NODE_HOST + '/api/zt/public-key');
+    const data = await resp.json();
+    if (data.success) {
+      const el = document.getElementById('ztPublicKey');
+      const shortKey = data.publicKeyPem.replace(/-{5}[A-Z ]+-{5}/g, '').trim().slice(0, 64);
+      el.textContent = `Ed25519 · ${data.algorithm} · FP:${data.fingerprint} · ${shortKey}...`;
+      el.title = data.publicKeyPem;
+    }
+  } catch {
+    document.getElementById('ztPublicKey').textContent = 'Public key endpoint unreachable — server may be down';
+  }
+}
+
 async function refreshAll() {
   const status = await fetchSecurityStatus();
   const threats = await fetchThreats();
   const blocked = await fetchBlockedIPs();
+  await fetchZeroTrustStatus();
 
   if (status && threats) {
     const totalThreats = threats.total || 0;
@@ -361,7 +435,9 @@ async function refreshAll() {
 
 (function init() {
   refreshAll();
+  fetchPublicKey();
   setInterval(refreshAll, 5000);
+  setInterval(fetchPublicKey, 30000);
   renderAnomalyChart();
   setInterval(renderAnomalyChart, 3000);
 })();

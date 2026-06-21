@@ -38,6 +38,40 @@ def get_client_ip():
     return request.remote_addr or "unknown"
 
 
+# ─── Zero-Trust: HMAC inter-service verification ───────────────────────────
+ZT_HMAC_SECRET = os.environ.get("ZT_HMAC_SECRET", None)
+
+def verify_hmac(payload_bytes, signature_header):
+    if not ZT_HMAC_SECRET or not signature_header:
+        return None  # No secret configured or no signature — unknown status
+    import hmac as hmac_mod
+    expected = hmac_mod.new(
+        ZT_HMAC_SECRET.encode("utf-8"),
+        payload_bytes,
+        "sha256"
+    ).hexdigest()
+    return hmac_mod.compare_digest(expected, signature_header)
+
+
+@app.route("/api/security/zt-status", methods=["GET"])
+def zt_status():
+    hmac_header = request.headers.get("X-ZT-HMAC", "")
+    hmac_ts = request.headers.get("X-ZT-HMAC-Timestamp", "")
+    body = request.get_data()
+    hmac_valid = verify_hmac(body, hmac_header) if body else None
+    return jsonify({
+        "success": True,
+        "hmac_configured": ZT_HMAC_SECRET is not None,
+        "hmac_present": bool(hmac_header),
+        "hmac_valid": hmac_valid,
+        "timestamp": hmac_ts,
+        "message": "Zero-trust HMAC inter-service verification active" if hmac_valid else (
+            "HMAC not configured on AI Engine side — set ZT_HMAC_SECRET env var" if not ZT_HMAC_SECRET else "HMAC present but mismatch"
+        )
+    })
+# ─── End Zero-Trust ─────────────────────────────────────────────────────────
+
+
 @app.route("/api/security/analyze", methods=["POST"])
 def analyze_request():
     ip = get_client_ip()

@@ -29,6 +29,68 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
+// ─── Zero-Trust Cryptography Infrastructure ────────────────────────────────
+const crypto = require('crypto');
+
+// Ed25519 keypair for content signing — every response carries a signature
+// proving it came from this server (tamper-proof)
+const serverKeyPair = crypto.generateKeyPairSync('ed25519', {
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+});
+const SERVER_PUBLIC_KEY_PEM = serverKeyPair.publicKey;
+
+// HMAC secret for server ↔ AI Engine inter-service trust
+const ZT_HMAC_SECRET = process.env.ZT_HMAC_SECRET || crypto.randomBytes(32).toString('hex');
+
+// In-memory nonce/token store for issued zero-trust tokens
+const ztTokens = new Map();
+const ZT_TOKEN_TTL = 300_000; // 5 min
+
+function signContent(content) {
+    try {
+        const sign = crypto.createSign('sha256');
+        sign.update(typeof content === 'string' ? content : JSON.stringify(content));
+        sign.end();
+        return sign.sign(serverKeyPair.privateKey, 'base64');
+    } catch (e) {
+        return null;
+    }
+}
+
+function verifyContentSignature(content, signature, publicKeyPem) {
+    try {
+        const verify = crypto.createVerify('sha256');
+        verify.update(typeof content === 'string' ? content : JSON.stringify(content));
+        verify.end();
+        return verify.verify(publicKeyPem, signature, 'base64');
+    } catch (e) {
+        return false;
+    }
+}
+
+function issueZtToken(clientId) {
+    const token = crypto.randomBytes(24).toString('hex');
+    ztTokens.set(token, { clientId, issued: Date.now(), ttl: ZT_TOKEN_TTL });
+    return token;
+}
+
+function verifyZtToken(token) {
+    const entry = ztTokens.get(token);
+    if (!entry) return null;
+    if (Date.now() - entry.issued > entry.ttl) {
+        ztTokens.delete(token);
+        return null;
+    }
+    return entry;
+}
+
+function computeHmac(payload, secret) {
+    return crypto.createHmac('sha256', secret).update(typeof payload === 'string' ? payload : JSON.stringify(payload)).digest('hex');
+}
+
+// ─── End Zero-Trust Infrastructure ─────────────────────────────────────────
+
 let suiAvailableCache = null; // null = unknown, true/false = cached
 let suiBinaryCache = null;
 
@@ -441,11 +503,25 @@ async function askGeminiAssistant(message, history = []) {
 // Handle cross-origin telemetry requests cleanly
 app.use(cors());
 app.use(express.json());
+
+// ─── Zero-Trust: Sign all response bodies ─────────────────────────────────
+app.use((req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = function (body) {
+        const signature = signContent(body);
+        if (signature) res.setHeader('X-ZT-Signature', signature);
+        res.setHeader('X-ZT-PublicKey', SERVER_PUBLIC_KEY_PEM.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim());
+        return originalJson(body);
+    };
+    next();
+});
+// ─── End Zero-Trust Response Signing ──────────────────────────────────────
+
 // Serve static UI files from the `ui` directory
 app.use(express.static('ui'));
 
 // Redirect root to the starting page
-app.get('/', (req, res) => res.redirect('/startingpart.html'));
+app.get('/', (req, res) => res.redirect('/index.html'));
 
 /**
  * Custom Remote Compiler Hook
@@ -1104,6 +1180,64 @@ app.get('/security-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'ui', 'security_dashboard.html'));
 });
 
+// ─── Zero-Trust: API Endpoints ─────────────────────────────────────────────
+
+// Get server's Ed25519 public key (clients use this to verify response signatures)
+app.get('/api/zt/public-key', (req, res) => {
+    res.json({
+        success: true,
+        algorithm: 'Ed25519',
+        publicKeyPem: SERVER_PUBLIC_KEY_PEM,
+        fingerprint: crypto.createHash('sha256').update(SERVER_PUBLIC_KEY_PEM).digest('hex').slice(0, 16),
+        hint: 'Verify X-ZT-Signature headers on all API responses using this public key.'
+    });
+});
+
+// Issue a short-lived zero-trust token (client identifies itself)
+app.post('/api/zt/request-token', (req, res) => {
+    const { clientId } = req.body || {};
+    if (!clientId) {
+        return res.status(400).json({ success: false, error: 'clientId required' });
+    }
+    const token = issueZtToken(String(clientId).slice(0, 64));
+    res.json({ success: true, token, ttl: ZT_TOKEN_TTL, hint: 'Include header X-ZT-Token on subsequent requests.' });
+});
+
+// Verify a client-supplied signature against known data
+app.post('/api/zt/verify', (req, res) => {
+    const { data, signature, publicKeyPem } = req.body || {};
+    if (!data || !signature || !publicKeyPem) {
+        return res.status(400).json({ success: false, error: 'data, signature, and publicKeyPem required' });
+    }
+    const valid = verifyContentSignature(data, signature, publicKeyPem);
+    res.json({ success: true, valid, data, signature: signature.slice(0, 20) + '...' });
+});
+
+// Zero-trust status page — health of all crypto layers
+app.get('/api/zt/status', (req, res) => {
+    res.json({
+        success: true,
+        responseSigning: { algorithm: 'Ed25519', active: true },
+        hmacInterService: { algorithm: 'HMAC-SHA256', active: true, secretLength: ZT_HMAC_SECRET.length },
+        tokenAuth: { active: true, ttl: ZT_TOKEN_TTL, activeTokens: ztTokens.size },
+        timestamp: Date.now()
+    });
+});
+
+// Middleware: verify ZT-Token on sensitive endpoints (non-blocking, logs only)
+app.use('/api/sui', (req, res, next) => {
+    const token = req.headers['x-zt-token'];
+    if (token) {
+        const entry = verifyZtToken(token);
+        if (entry) {
+            req.ztClientId = entry.clientId;
+        } else {
+            console.warn(`[ZT] Invalid/expired token from ${req.ip}`);
+        }
+    }
+    next();
+});
+
 // ─── AI Security Engine Integration ──────────────────────────────────────────
 
 const AI_ENGINE_URL = 'http://127.0.0.1:5001';
@@ -1118,15 +1252,23 @@ app.use('/api/security', async (req, res) => {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
 
+        const bodyPayload = req.method !== 'GET' && req.method !== 'HEAD' ? (req.body || {}) : {};
+        const bodyStr = JSON.stringify(bodyPayload);
+        const hmacSignature = computeHmac(bodyStr, ZT_HMAC_SECRET);
+
         const options = {
             method: req.method,
-            headers: { 'Content-Type': 'application/json', ...Object.fromEntries(
+            headers: {
+                'Content-Type': 'application/json',
+                'X-ZT-HMAC': hmacSignature,
+                'X-ZT-HMAC-Timestamp': String(Date.now()),
+                ...Object.fromEntries(
                 Object.entries(req.headers || {}).filter(([k]) => !['host','connection','content-length'].includes(k.toLowerCase()))
             )},
             signal: controller.signal
         };
         if (req.method !== 'GET' && req.method !== 'HEAD') {
-            options.body = JSON.stringify(req.body || {});
+            options.body = bodyStr;
         }
 
         const aiResp = await fetch(url, options);

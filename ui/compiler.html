@@ -21,7 +21,7 @@
       width: 100%;
       height: 100%;
       background: #010510;
-      overflow-x: hidden;
+      overflow: hidden;
       font-family: 'Space Grotesk', sans-serif;
       color: #e2e8f0;
     }
@@ -458,7 +458,9 @@
       position: relative;
       flex: 1;
       min-height: 280px;
+      max-height: 100%;
       background: #01040f;
+      overflow: hidden;
     }
 
     /* HUD Block Overlay Specs */
@@ -599,8 +601,11 @@
     <nav class="nav-features-center">
       <a href="startingpart.html" class="nav-link">Home</a>
       <a href="#" class="nav-link active">Compiler</a>
-      <a href="#" class="nav-link">DeepBook v3</a>
-      <a href="#" class="nav-link">Walrus Vault</a>
+      <a href="Deepbookv3ui/Deepbookv3.html" class="nav-link">DeepBook v3</a>
+      <a href="security_dashboard.html" class="nav-link">Security</a>
+      <a href="walrus_vault.html" class="nav-link">Vault</a>
+      <a href="poison_ai.html" class="nav-link">Poison AI</a>
+      <a href="trojan_bots.html" class="nav-link">Trojan Bots</a>
     </nav>
 
     <div class="nav-controls-right">
@@ -841,17 +846,19 @@
       return '';
     }
 
-    function appendCompiledBlock(statusLabel = "COMPILED / LOCAL VALIDATED") {
+function appendCompiledBlock(statusLabel = "COMPILED / LOCAL VALIDATED") {
       const lastNodePos = blocksArray[blocksArray.length - 1].position;
       const nextPosition = new THREE.Vector3(
-        lastNodePos.x + 5,
-        (Math.random() - 0.5) * 4,
-        (Math.random() - 0.5) * 3
+        Math.min(lastNodePos.x + 3.5, 15),
+        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * 1.5
       );
 
       createBlockNode(blocksArray.length, nextPosition);
       rebuildChainConnections();
 
+      // Auto-frame camera to fit all blocks
+      frameCameraToFit();
       controls.target.copy(nextPosition);
 
       const freshBlock = blocksArray[blocksArray.length - 1];
@@ -969,6 +976,18 @@
     // Track visualizer variables
     let nodeCount = 3;
 
+    function frameCameraToFit() {
+      if (blocksArray.length === 0) return;
+      const center = new THREE.Vector3(0, 0, 0);
+      blocksArray.forEach(b => center.add(b.position));
+      center.divideScalar(blocksArray.length);
+      const maxDist = Math.max(6, blocksArray.reduce((m, b) => Math.max(m, b.position.distanceTo(center)), 0) + 4);
+      controls.target.copy(center);
+      camera.position.set(center.x, center.y + 3, center.z + maxDist * 1.5);
+      camera.lookAt(center);
+      controls.update();
+    }
+
     function initThreeVisualizer() {
       scene = new THREE.Scene();
       scene.background = new THREE.Color('#01040f');
@@ -998,9 +1017,10 @@
 
       // Generate initial mock blockchain nodes topology
       for (let i = 0; i < nodeCount; i++) {
-        createBlockNode(i, new THREE.Vector3((i - 1) * 6, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2));
+        createBlockNode(i, new THREE.Vector3((i - 1) * 4, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5));
       }
       rebuildChainConnections();
+      frameCameraToFit();
 
       // Starfield Particle Dust Overlay background
       const starsGeo = new THREE.BufferGeometry();
@@ -1171,9 +1191,12 @@
           document.getElementById('hudGasUsed').textContent = data.gasUsed;
           document.getElementById('hudStatus').textContent = data.status;
 
-          // Align tooltip floating geometry anchor coordinates with offset mapping rules
-          hoverCard.style.left = `${e.clientX + 18}px`;
-          hoverCard.style.top = `${e.clientY + 18}px`;
+          // Clamp hover card within viewport to prevent overflow
+          const cardW = 320, cardH = 280;
+          const cardLeft = Math.min(Math.max(e.clientX + 18, 12), window.innerWidth - cardW - 12);
+          const cardTop  = Math.min(Math.max(e.clientY + 18, 12), window.innerHeight - cardH - 12);
+          hoverCard.style.left = `${cardLeft}px`;
+          hoverCard.style.top = `${cardTop}px`;
           hoverCard.style.display = 'block';
 
         } else {

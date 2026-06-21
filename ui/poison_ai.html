@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poison AI Matrix — FluidBLCX Adversarial Obfuscation</title>
+<style>
+:root { --bg:#0a0f1e; --surface:#111827; --surface2:#1a2332; --border:#1e293b; --primary:#38bdf8; --accent:#f59e0b; --green:#22c55e; --red:#ef4444; --purple:#a78bfa; --pink:#ec4899; --text:#e2e8f0; --muted:#64748b; --radius:8px; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Inter','Segoe UI',sans-serif; min-height:100vh; overflow-x:hidden; }
+header { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:-0.5px; }
+.logo svg { flex-shrink:0; }
+.logo span { background:linear-gradient(135deg,var(--pink),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+nav { display:flex; gap:4px; }
+nav a { color:var(--muted); text-decoration:none; padding:8px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; transition:all .15s; }
+nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
+.page { max-width:1400px; margin:0 auto; padding:24px 32px; }
+.hero { background:linear-gradient(135deg,rgba(236,72,153,0.05),rgba(167,139,250,0.05)); border:1px solid var(--border); border-radius:12px; padding:32px; margin-bottom:24px; display:flex; align-items:center; gap:24px; }
+.hero-icon { width:60px; height:60px; border-radius:14px; background:linear-gradient(135deg,rgba(236,72,153,0.15),rgba(167,139,250,0.15)); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
+.hero-content h1 { font-size:22px; font-weight:700; margin-bottom:4px; }
+.hero-content p { font-size:13px; color:var(--muted); max-width:600px; line-height:1.5; }
+.hero-badge { margin-left:auto; background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.2); padding:6px 14px; border-radius:20px; font-size:11px; color:var(--pink); font-weight:600; white-space:nowrap; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; }
+.stat-card .label { font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:6px; }
+.stat-card .value { font-size:26px; font-weight:700; }
+.stat-card .sub { font-size:11px; color:var(--muted); margin-top:4px; }
+.stat-card.pink .value { color:var(--pink); }
+.stat-card.purple .value { color:var(--purple); }
+.stat-card.green .value { color:var(--green); }
+.stat-card.warn .value { color:var(--accent); }
+.stat-card .mini-icon { position:absolute; bottom:8px; right:10px; font-size:32px; opacity:0.06; pointer-events:none; }
+.main-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:24px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.card h3 { font-size:12px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.poison-stream { max-height:420px; overflow-y:auto; }
+.poison-item { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); font-size:12px; font-family:'SF Mono','Consolas',monospace; }
+.poison-item .tag { padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; flex-shrink:0; }
+.poison-item .tag.noise { background:rgba(236,72,153,0.15); color:var(--pink); }
+.poison-item .tag.trap { background:rgba(245,158,11,0.15); color:var(--accent); }
+.poison-item .tag.honeypot { background:rgba(167,139,250,0.15); color:var(--purple); }
+.poison-item .data { flex:1; color:var(--muted); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.poison-item .time { color:var(--muted); font-size:10px; white-space:nowrap; }
+.layer-list { display:flex; flex-direction:column; gap:8px; }
+.layer-item { display:flex; align-items:center; gap:10px; padding:10px; background:var(--surface2); border-radius:6px; }
+.layer-status { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.layer-status.active { background:var(--pink); box-shadow:0 0 8px rgba(236,72,153,0.5); }
+.layer-info { flex:1; }
+.layer-name { font-size:13px; font-weight:600; }
+.layer-desc { font-size:11px; color:var(--muted); }
+.matrix-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+.matrix-cell { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:14px; text-align:center; font-family:'SF Mono','Consolas',monospace; font-size:11px; transition:all .3s; }
+.matrix-cell .val { font-size:18px; font-weight:700; margin-bottom:4px; }
+.matrix-cell .lbl { color:var(--muted); font-size:10px; text-transform:uppercase; }
+.matrix-cell.noise .val { color:var(--pink); }
+.matrix-cell.trap .val { color:var(--accent); }
+.matrix-cell.honeypot .val { color:var(--purple); }
+.matrix-cell.neutralized .val { color:var(--green); }
+@keyframes flicker { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+.noise-animation { animation:flicker 1.5s infinite; }
+@media (max-width:1024px) { .stats-grid, .matrix-grid { grid-template-columns:repeat(2,1fr); } .main-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/><circle cx="12" cy="12" r="3" fill="#ec4899" opacity="0.3"/></svg>
+    <span>POISON AI MATRIX</span>
+  </div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="startingpart.html">Launchpad</a>
+    <a href="compiler.html">Compiler</a>
+    <a href="Deepbookv3ui/Deepbookv3.html">DeepBook</a>
+    <a href="security_dashboard.html">Security</a>
+    <a href="walrus_vault.html">Vault</a>
+    <a href="poison_ai.html" class="active">Poison AI</a>
+    <a href="trojan_bots.html">Trojan Bots</a>
+  </nav>
+</header>
+<div class="page">
+<div class="hero">
+  <div class="hero-icon">☠</div>
+  <div class="hero-content">
+    <h1>Poison AI Obfuscation Matrix</h1>
+    <p>Autonomous adversarial noise injection layer that feeds toxic data vectors to hostile ML scanners, neutralizing their ability to analyze trading algorithms, detect vulnerabilities, or build predictive front-running models.</p>
+  </div>
+  <div class="hero-badge noise-animation">☠ ACTIVE · NOISE INJECTION</div>
+</div>
+<div class="stats-grid">
+  <div class="stat-card pink">
+    <div class="label">Noise Vectors Injected</div>
+    <div class="value" id="noiseCount">0</div>
+    <div class="sub">mathematical poison payloads</div>
+    <div class="mini-icon">📡</div>
+  </div>
+  <div class="stat-card warn">
+    <div class="label">Adversarial Scanners Blocked</div>
+    <div class="value" id="blockedScanners">0</div>
+    <div class="sub">hostile ML reconnaissance attempts</div>
+    <div class="mini-icon">🛡</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="label">Honeypot Traps Active</div>
+    <div class="value" id="honeypotCount">0</div>
+    <div class="sub">fake execution endpoints deployed</div>
+    <div class="mini-icon">🎯</div>
+  </div>
+  <div class="stat-card green">
+    <div class="label">Threats Neutralized</div>
+    <div class="value" id="neutralized">0</div>
+    <div class="sub">AI-guided attack vectors nullified</div>
+    <div class="mini-icon">✓</div>
+  </div>
+</div>
+<div class="matrix-grid">
+  <div class="matrix-cell noise"><div class="val" id="mNoise">—</div><div class="lbl">Noise Density</div></div>
+  <div class="matrix-cell trap"><div class="val" id="mEntropy">—</div><div class="lbl">Entropy Level</div></div>
+  <div class="matrix-cell honeypot"><div class="val" id="mHoneypot">—</div><div class="lbl">Honeypot Nodes</div></div>
+  <div class="matrix-cell neutralized"><div class="val" id="mCoverage">—</div><div class="lbl">Coverage %</div></div>
+</div>
+<div class="main-grid">
+  <div class="card">
+    <h3>☠ Poison Injection Stream</h3>
+    <div class="poison-stream" id="poisonStream"><div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Initializing poison matrix...</div></div>
+  </div>
+  <div class="card">
+    <h3>🛡 Defense Layers</h3>
+    <div class="layer-list">
+      <div class="layer-item"><div class="layer-status active"></div><div class="layer-info"><div class="layer-name">Noise Vector Injection</div><div class="layer-desc">Mathematical noise pumped into execution telemetry</div></div></div>
+      <div class="layer-item"><div class="layer-status active"></div><div class="layer-info"><div class="layer-name">Adversarial Weight Poisoning</div><div class="layer-desc">Corrupted training weights fed to scanning ML</div></div></div>
+      <div class="layer-item"><div class="layer-status active"></div><div class="layer-info"><div class="layer-name">Honeypot Execution Endpoints</div><div class="layer-desc">Fake RPC nodes returning poisoned data</div></div></div>
+      <div class="layer-item"><div class="layer-status active"></div><div class="layer-info"><div class="layer-name">Telemetry Stream Obfuscation</div><div class="layer-desc">Real trade data masked in noise signatures</div></div></div>
+      <div class="layer-item"><div class="layer-status active"></div><div class="layer-info"><div class="layer-name">Predictive Model Poisoning</div><div class="layer-desc">Front-running models trained on fake patterns</div></div></div>
+      <div class="layer-item"><div class="layer-status active"></div><div class="layer-info"><div class="layer-name">Zero-Trust E2E Encryption</div><div class="layer-desc">All streams encrypted at cryptographic boundary</div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+const poisonTypes = ['NOISE_VECTOR','ENTROPY_BURST','HONEYPOT_PING','WEIGHT_CORRUPT','TELEMETRY_MASK','TRAP_SIGNAL'];
+const poisonIps = ['192.168.♿.♿','10.0.♿.♿','172.16.♿.♿','45.33.♿.♿','89.♿.♿.♿'];
+function randomIp() { return poisonIps[Math.floor(Math.random()*poisonIps.length)].replace(/♿/g,()=>Math.floor(Math.random()*255)); }
+let stats = { noise:0, blocked:0, honeypot:0, neutralized:0 };
+function getTag(type) {
+  if (type.startsWith('NOISE')||type==='ENTROPY_BURST') return 'noise';
+  if (type==='HONEYPOT_PING') return 'honeypot';
+  return 'trap';
+}
+function injectPoison() {
+  const type = poisonTypes[Math.floor(Math.random()*poisonTypes.length)];
+  const tag = getTag(type);
+  if (tag==='noise') stats.noise++;
+  else if (tag==='honeypot') stats.honeypot++;
+  else { stats.blocked++; stats.neutralized++; }
+  const ip = randomIp();
+  const time = new Date().toLocaleTimeString();
+  const hex = '0x' + Array.from({length:8},()=>Math.floor(Math.random()*16).toString(16)).join('');
+  const container = document.getElementById('poisonStream');
+  const div = document.createElement('div');
+  div.className = 'poison-item';
+  div.innerHTML = `<span class="tag ${tag}">${type}</span><span class="data">${ip} · ${hex} · ${tag==='noise'?'noise burst':tag==='honeypot'?'fake endpoint':'trap triggered'}</span><span class="time">${time}</span>`;
+  container.insertBefore(div, container.firstChild);
+  while (container.children.length > 50) container.removeChild(container.lastChild);
+  document.getElementById('noiseCount').textContent = stats.noise.toLocaleString();
+  document.getElementById('blockedScanners').textContent = stats.blocked.toLocaleString();
+  document.getElementById('honeypotCount').textContent = stats.honeypot;
+  document.getElementById('neutralized').textContent = stats.neutralized.toLocaleString();
+  document.getElementById('mNoise').textContent = (Math.random()*99+1).toFixed(1) + '%';
+  document.getElementById('mEntropy').textContent = (Math.random()*8+2).toFixed(2) + 'σ';
+  document.getElementById('mHoneypot').textContent = Math.floor(Math.random()*12+3);
+  document.getElementById('mCoverage').textContent = (Math.random()*15+85).toFixed(1) + '%';
+}
+(function init() {
+  for (let i=0; i<8; i++) injectPoison();
+  setInterval(injectPoison, 800 + Math.random()*1200);
+})();
+</script>
+</body>
+</html>
