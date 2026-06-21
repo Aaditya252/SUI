@@ -561,7 +561,137 @@
       color: #ffffff;
     }
 
-    /* Cybernetic Scanner Viewport Overlay Graphic */
+    /* ── SUCCESS TICK CONFIRMATION MODAL ── */
+    .success-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(2, 4, 10, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .success-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .success-card {
+      background: #050816;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 24px;
+      padding: 48px 40px 36px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 60px rgba(16,185,129,0.08);
+      transform: scale(0.9);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .success-overlay.active .success-card {
+      transform: scale(1);
+    }
+    .success-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.1);
+      border: 2px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .success-circle svg {
+      width: 36px; height: 36px;
+      stroke: #10b981;
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .success-checkmark {
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: drawCheck 0.6s ease 0.2s forwards;
+    }
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+    .success-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #10b981;
+      margin-bottom: 8px;
+    }
+    .success-subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .success-tx-hash {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #64748b;
+      background: rgba(255,255,255,0.03);
+      padding: 8px 12px;
+      border-radius: 8px;
+      word-break: break-all;
+      margin: 12px 0 20px;
+    }
+    .success-dismiss-btn {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #10b981;
+      padding: 10px 28px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .success-dismiss-btn:hover {
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    /* ── LOADING SPINNER ── */
+    .swap-loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 5, 14, 0.6);
+      backdrop-filter: blur(4px);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .swap-loading-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .spinner-ring {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(6, 182, 212, 0.1);
+      border-top-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .swap-loading-text {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+    }
+
     .cyber-camera-viewport {
       width: 100%;
       height: 220px;
@@ -607,6 +737,28 @@
       width: 192px;
       height: 192px;
     }
+
+    .slippage-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .slippage-btn:hover {
+      border-color: rgba(6, 182, 212, 0.3);
+      color: #e2e8f0;
+    }
+    .slippage-btn.active {
+      background: rgba(6, 182, 212, 0.1);
+      border-color: #06b6d4;
+      color: #06b6d4;
+    }
   </style>
 
   <svg width="0" height="0" style="position: absolute;">
@@ -645,7 +797,7 @@
           Audit</button>
       </nav>
 
-      <div class="header-action-cluster">
+        <div class="header-action-cluster">
         <a class="quant-tradex-btn" href="tradewindow.html">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M3 17l6-6 4 4 8-8" />
@@ -653,10 +805,16 @@
           </svg>
           Quant TradeX
         </a>
-        <div class="wallet-status-capsule">
-          <span class="pulse-indicator"></span>
-          <span>sui:0x12b3...aa65</span>
+        <div class="wallet-status-capsule" id="walletStatusCapsule" style="border-color: rgba(255,255,255,0.06);">
+          <span class="pulse-indicator" id="walletPulse" style="background: #64748b; box-shadow: none; width: 7px; height: 7px;"></span>
+          <span id="walletStatusText" style="font-size: 12px;">Not Connected</span>
         </div>
+        <button class="btn-action-primary" id="walletConnectBtn" onclick="connectSuiWallet()" style="padding: 8px 16px; font-size: 12px; border-radius: 12px; white-space: nowrap;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 12v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2m18 0v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6m18 0h-3.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 006.586 12H3" />
+          </svg>
+          <span id="walletConnectText">Connect Wallet</span>
+        </button>
       </div>
     </header>
 
@@ -741,10 +899,26 @@
           </div>
         </div>
 
-        <div id="flow-swap" class="tab-view-flow">
-          <div class="premium-glass-card" style="max-width: 560px; margin: 0 auto;">
+          <div id="flow-swap" class="tab-view-flow">
+          <div id="testnetBanner" style="max-width: 560px; margin: 0 auto 12px; display: none;">
+            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 12px;">🧪</span>
+                <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">Sui Testnet Mode</span>
+                <span style="font-size: 11px; color: #94a3b8;">Tokens have no real value</span>
+              </div>
+              <a href="https://faucet.testnet.sui.io" target="_blank" style="font-size: 11px; color: #38bdf8; text-decoration: none; font-weight: 600; font-family: var(--font-mono);">Get Test SUI ↗</a>
+            </div>
+          </div>
+          <div class="premium-glass-card" style="max-width: 560px; margin: 0 auto; position: relative;">
             <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.02em;">Instant
               Liquidity Pipeline</h3>
+
+            <!-- Loading overlay -->
+            <div class="swap-loading-overlay" id="swapLoadingOverlay">
+              <div class="spinner-ring"></div>
+              <div class="swap-loading-text" id="swapLoadingText">Fetching quote...</div>
+            </div>
 
             <div class="trade-input-card">
               <label
@@ -752,12 +926,14 @@
                 LIQUIDITY OUTFLOW</label>
               <div class="input-row-space">
                 <input type="number" class="numeric-trade-input" id="swap-source-qty" value="10.0"
-                  oninput="calculateInboundSwapPipeline()">
+                  oninput="debouncedSwapQuote()">
                 <select class="native-select-styled" id="swap-source-asset-select"
-                  onchange="calculateInboundSwapPipeline()">
-                  <option value="ethereum">ETH</option>
-                  <option value="sui" selected>SUI</option>
-                  <option value="solana">SOL</option>
+                  onchange="debouncedSwapQuote()">
+                  <option value="SUI" selected>SUI</option>
+                  <option value="ETH">ETH</option>
+                  <option value="SOL">SOL</option>
+                  <option value="BTC">BTC</option>
+                  <option value="BNB">BNB</option>
                 </select>
               </div>
             </div>
@@ -781,17 +957,52 @@
               <div class="input-row-space">
                 <input type="number" class="numeric-trade-input" id="swap-target-qty" readonly>
                 <select class="native-select-styled" id="swap-target-asset-select"
-                  onchange="calculateInboundSwapPipeline()">
-                  <option value="bitcoin">BTC</option>
-                  <option value="tether" selected>USDT</option>
-                  <option value="binancecoin">BNB</option>
+                  onchange="debouncedSwapQuote()">
+                  <option value="USDT" selected>USDT</option>
+                  <option value="USDC">USDC</option>
+                  <option value="BTC">BTC</option>
+                  <option value="ETH">ETH</option>
+                  <option value="SOL">SOL</option>
                 </select>
               </div>
             </div>
 
-            <button class="btn-action-primary" style="width: 100%; margin-top: 16px;"
-              onclick="broadcastSimulatedTransactionBlock('Liquidity Atomic Swap Execution Successful')">Inject Smart
-              Liquidity Contract</button>
+            <!-- Quote details -->
+            <div id="swapQuoteDetails" style="display: none; margin-top: 8px; padding: 12px 16px; background: rgba(2,5,14,0.5); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); font-size: 12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="color: var(--text-muted);">Rate</span>
+                <span style="font-family: var(--font-mono); color: #e2e8f0;" id="quoteRate">-</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="color: var(--text-muted);">Price Impact</span>
+                <span style="font-family: var(--font-mono);" id="quotePriceImpact">-</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="color: var(--text-muted);">Min Received</span>
+                <span style="font-family: var(--font-mono); color: #f59e0b;" id="quoteMinReceived">-</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color: var(--text-muted);">Network Fee</span>
+                <span style="font-family: var(--font-mono); color: #64748b;" id="quoteFee">0.00025 SUI</span>
+              </div>
+            </div>
+
+            <!-- Slippage selector -->
+            <div style="display: flex; gap: 8px; margin-top: 16px; align-items: center;">
+              <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.03em;">Slippage:</span>
+              <button class="slippage-btn" data-slippage="0.1" onclick="setSlippage(0.1)">0.1%</button>
+              <button class="slippage-btn active" data-slippage="0.5" onclick="setSlippage(0.5)">0.5%</button>
+              <button class="slippage-btn" data-slippage="1.0" onclick="setSlippage(1.0)">1.0%</button>
+              <button class="slippage-btn" data-slippage="3.0" onclick="setSlippage(3.0)">3.0%</button>
+            </div>
+
+            <div id="walletBalanceInfo" style="display: none; margin-top: 12px; padding: 10px 14px; background: rgba(2,5,14,0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); font-size: 11px; font-family: var(--font-mono);">
+              <span style="color: var(--text-muted);">Wallet SUI Balance:</span>
+              <span style="color: #e2e8f0; font-weight: 600; margin-left: 6px;" id="walletSuiBalance">—</span>
+            </div>
+
+            <button class="btn-action-primary" style="width: 100%; margin-top: 16px;" id="swapExecuteBtn"
+              onclick="executeSwap()">Inject Smart Liquidity Contract</button>
           </div>
         </div>
 
@@ -996,20 +1207,34 @@
       <div id="qr-container-target"></div>
 
       <div
-        style="background: rgba(2,5,15,0.7); border: 1px solid rgba(6, 182, 212, 0.2); padding: 14px; border-radius: 12px; font-family: var(--font-mono); font-size: 12px; text-align: center; word-break: break-all; color: #e2e8f0;">
+        style="background: rgba(2,5,15,0.7); border: 1px solid rgba(6, 182, 212, 0.2); padding: 14px; border-radius: 12px; font-family: var(--font-mono); font-size: 12px; text-align: center; word-break: break-all; color: #e2e8f0;"
+        id="receiptAddressDisplay">
         0x12b39f72c184ea059124b88e2563eb38bdf8aa65
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- ── SUCCESS CONFIRMATION MODAL ── -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-card">
+      <div class="success-circle">
+        <svg viewBox="0 0 24 24">
+          <polyline class="success-checkmark" points="4,13 9,18 20,6" />
+        </svg>
+      </div>
+      <div class="success-title" id="successTitle">Transaction Confirmed</div>
+      <div class="success-subtitle" id="successSubtitle">Swap executed successfully</div>
+      <div class="success-tx-hash" id="successTxHash">0x...</div>
+      <button class="success-dismiss-btn" onclick="dismissSuccessModal()">Done</button>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     // Engine State Parameters Configuration
     let coreTokenAssetRegistry = {};
     let trackedAssetPayloadArray = [];
-    let applicationLineChartInstance = null;
     let activelySelectedTickerString = 'sui';
 
     // Mock Vault Quantities Mapped Directly onto Ledger Balance Arrays
@@ -1066,7 +1291,7 @@
         populatePortfolioInterface();
         populateMarketsInterface();
         refreshDynamicTechnicalChart();
-        calculateInboundSwapPipeline();
+        debouncedSwapQuote();
       } catch (faultVector) {
         console.warn("[TELEMETRY HUB WARNING] Public nodes congested. Executing precise fallback models.");
         populateDeterministicFallbackModels();
@@ -1088,7 +1313,7 @@
       populatePortfolioInterface();
       populateMarketsInterface();
       refreshDynamicTechnicalChart();
-      calculateInboundSwapPipeline();
+      debouncedSwapQuote();
     }
 
     // Populate Portfolio Matrix Parameters
@@ -1097,6 +1322,48 @@
       elementBodyTarget.innerHTML = '';
       let runningValuationSum = 0;
 
+      // If connected to testnet with real balances, use those
+      if (isTestnetMode && realBalances.length > 0) {
+        // Create a lookup from tracked assets for prices
+        const priceMap = {};
+        trackedAssetPayloadArray.forEach(t => { priceMap[t.symbol.toUpperCase()] = t; });
+
+        realBalances.forEach(b => {
+          const sym = b.symbol.toUpperCase();
+          const token = priceMap[sym] || null;
+          const price = token?.current_price || 0;
+          const balance = parseFloat(b.formattedBalance);
+          const value = balance * price;
+          runningValuationSum += value;
+
+          const dynamicRow = document.createElement('tr');
+          dynamicRow.innerHTML = `
+            <td>
+              <div class="token-identity-group">
+                <div class="token-avatar-ring" style="background: rgba(6, 182, 212, 0.1);">
+                  <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--accent-cyan);">${sym.slice(0,3)}</span>
+                </div>
+                <div>
+                  <strong style="color:#ffffff;">${b.name}</strong>
+                  <span class="badge-mono-ticker">${sym}</span>
+                  <span style="font-size: 10px; color: var(--functional-green); margin-left: 6px;">TESTNET</span>
+                </div>
+              </div>
+            </td>
+            <td class="numeric-data">${price ? '$' + price.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</td>
+            <td class="numeric-data" style="font-weight:600; color:#ffffff;">${balance.toLocaleString(undefined, { maximumFractionDigits: 6 })}</td>
+            <td class="numeric-data" style="font-weight:700; color: var(--accent-cyan);">${value ? '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}</td>
+          `;
+          elementBodyTarget.appendChild(dynamicRow);
+        });
+
+        document.getElementById('aggregated-fiat-valuation').textContent = `$${runningValuationSum.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        document.getElementById('global-portfolio-delta-percentage').textContent = '➔ Live Testnet — balances from Sui blockchain';
+        document.getElementById('global-portfolio-delta-percentage').style.color = 'var(--functional-green)';
+        return;
+      }
+
+      // Fallback to mock data
       trackedAssetPayloadArray.forEach(token => {
         const userHoldingsAmount = systemWalletQuantitiesLedger[token.id] || 0;
         const totalNetFiatValuation = userHoldingsAmount * token.current_price;
@@ -1168,90 +1435,548 @@
       refreshDynamicTechnicalChart();
     }
 
-    // High Fidelity Premium Chart Engine Rendering
-    function refreshDynamicTechnicalChart() {
-      const activelySelectedObject = coreTokenAssetRegistry[activelySelectedTickerString];
-      if (!activelySelectedObject) return;
+    // ── BINANCE CANDLESTICK DATA ──
+    const binanceSymbolMap = {
+      bitcoin:     'BTCUSDT',
+      ethereum:    'ETHUSDT',
+      sui:         'SUIUSDT',
+      solana:      'SOLUSDT',
+      binancecoin: 'BNBUSDT',
+      tether:      'USDCUSDT',
+      'usd-coin':  'USDCUSDT',
+    };
+    let chartOHLCCache = { symbol: null, data: null, ts: 0, ttl: 30000 };
 
-      let coordinateDataArray = [5, 12, 8, 18, 14, 24];
-      if (activelySelectedObject.sparkline_in_7d && activelySelectedObject.sparkline_in_7d.price) {
-        coordinateDataArray = activelySelectedObject.sparkline_in_7d.price.slice(-24);
+    async function fetchBinanceKlines(symbol, interval = '1h', limit = 50) {
+      const now = Date.now();
+      if (chartOHLCCache.symbol === symbol && chartOHLCCache.data && (now - chartOHLCCache.ts) < chartOHLCCache.ttl) {
+        return chartOHLCCache.data;
       }
-
-      const generatedTimeLabels = coordinateDataArray.map((_, positionIndex) => `T-${coordinateDataArray.length - positionIndex}h`);
-      const performanceSignIndicator = activelySelectedObject.price_change_percentage_24h >= 0;
-      const coreThemeColorHex = performanceSignIndicator ? '#10b981' : '#f43f5e';
-
-      const canvasRenderingContext = document.getElementById('telemetryDynamicLineChart').getContext('2d');
-
-      if (applicationLineChartInstance) {
-        applicationLineChartInstance.destroy();
+      try {
+        const resp = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+        const candles = json.map(k => ({
+          time: k[0],
+          open: parseFloat(k[1]),
+          high: parseFloat(k[2]),
+          low:  parseFloat(k[3]),
+          close: parseFloat(k[4]),
+          volume: parseFloat(k[5]),
+        }));
+        chartOHLCCache = { symbol, data: candles, ts: Date.now(), ttl: 30000 };
+        return candles;
+      } catch (e) {
+        console.warn('Binance klines fetch failed:', e.message);
+        if (chartOHLCCache.data) return chartOHLCCache.data;
+        return null;
       }
-
-      // Elegant linear area gradient mapping configurations
-      const verticalGradientGlow = canvasRenderingContext.createLinearGradient(0, 0, 0, 220);
-      verticalGradientGlow.addColorStop(0, performanceSignIndicator ? 'rgba(16, 185, 129, 0.16)' : 'rgba(244, 63, 94, 0.16)');
-      verticalGradientGlow.addColorStop(1, 'rgba(4, 6, 16, 0)');
-
-      applicationLineChartInstance = new Chart(canvasRenderingContext, {
-        type: 'line',
-        data: {
-          labels: generatedTimeLabels,
-          datasets: [{
-            data: coordinateDataArray,
-            borderColor: coreThemeColorHex,
-            borderWidth: 2.5,
-            pointRadius: 0,
-            hoverRadius: 4,
-            fill: true,
-            backgroundColor: verticalGradientGlow,
-            tension: 0.2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { display: false },
-            y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } }
-          }
-        }
-      });
     }
 
-    // Calculate Swap Volume Parameter Metrics
-    function calculateInboundSwapPipeline() {
-      const originalSourceAssetId = document.getElementById('swap-source-asset-select').value;
-      const intendedDestinationAssetId = document.getElementById('swap-target-asset-select').value;
+    // Candlestick Chart Rendering Engine
+    async function refreshCandlestickChart() {
+      const canvas = document.getElementById('telemetryDynamicLineChart');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
 
-      const numericalAmountInput = parseFloat(document.getElementById('swap-source-qty').value) || 0;
+      const w = rect.width;
+      const h = rect.height;
+      const pad = { top: 20, bottom: 30, left: 52, right: 12 };
+      const chartW = w - pad.left - pad.right;
+      const chartH = h - pad.top - pad.bottom;
 
-      const sourceAssetObject = coreTokenAssetRegistry[originalSourceAssetId];
-      const targetAssetObject = coreTokenAssetRegistry[intendedDestinationAssetId];
+      ctx.clearRect(0, 0, w, h);
 
-      if (sourceAssetObject && targetAssetObject) {
-        const algorithmicConversionOutput = (numericalAmountInput * sourceAssetObject.current_price) / targetAssetObject.current_price;
-        document.getElementById('swap-target-qty').value = algorithmicConversionOutput.toFixed(6);
+      const obj = coreTokenAssetRegistry[activelySelectedTickerString];
+      if (!obj) {
+        ctx.fillStyle = '#475569';
+        ctx.font = '12px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data', w / 2, h / 2);
+        return;
       }
+
+      // Fetch real OHLC from Binance
+      const binanceSym = binanceSymbolMap[activelySelectedTickerString] || 'BTCUSDT';
+      let candles = await fetchBinanceKlines(binanceSym, '1h', 40);
+      if (!candles || candles.length < 2) {
+        ctx.fillStyle = '#475569';
+        ctx.font = '12px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Candlestick data unavailable', w / 2, h / 2);
+        return;
+      }
+
+      const allPrices = candles.flatMap(c => [c.high, c.low]);
+      let min = Math.min(...allPrices);
+      let max = Math.max(...allPrices);
+      const range = max - min || 1;
+      const padding = range * 0.05;
+      min -= padding;
+      max += padding;
+
+      const toY = (v) => pad.top + chartH - ((v - min) / (max - min)) * chartH;
+      const gap = chartW / candles.length;
+      const candleW = Math.min(gap * 0.55, 8);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      const gridLines = 5;
+      for (let i = 0; i <= gridLines; i++) {
+        const y = pad.top + (chartH / gridLines) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(w - pad.right, y);
+        ctx.stroke();
+        const val = max - (i / gridLines) * (max - min);
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(val < 10 ? 4 : 2), pad.left - 6, y + 3);
+      }
+
+      // Draw candles
+      candles.forEach((c, i) => {
+        const x = pad.left + i * gap + gap / 2;
+        const openY = toY(c.open);
+        const closeY = toY(c.close);
+        const highY = toY(c.high);
+        const lowY = toY(c.low);
+        const isUp = c.close >= c.open;
+        const color = isUp ? '#10b981' : '#f43f5e';
+
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 1.2;
+
+        ctx.beginPath();
+        ctx.moveTo(x, highY);
+        ctx.lineTo(x, lowY);
+        ctx.stroke();
+
+        const bodyTop = Math.min(openY, closeY);
+        const bodyH = Math.max(Math.abs(closeY - openY), 1.2);
+        if (isUp) {
+          ctx.fillRect(x - candleW / 2, bodyTop, candleW, bodyH);
+        } else {
+          ctx.strokeRect(x - candleW / 2, bodyTop, candleW, bodyH);
+        }
+      });
+
+      // X-axis time labels
+      ctx.fillStyle = '#475569';
+      ctx.font = '9px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      const labelCount = Math.min(candles.length, 6);
+      const labelStep = Math.floor(candles.length / labelCount);
+      for (let i = 0; i < candles.length; i += labelStep) {
+        const x = pad.left + i * gap + gap / 2;
+        const d = new Date(candles[i].time);
+        ctx.fillText(`${d.getHours()}${d.getHours() < 12 ? 'a' : 'p'}`, x, h - pad.bottom + 16);
+      }
+
+      // Title line with last price and change
+      const last = candles[candles.length - 1];
+      const first = candles[0];
+      const changePct = first.open ? ((last.close - first.open) / first.open * 100) : 0;
+      const isUp = changePct >= 0;
+      ctx.fillStyle = isUp ? '#10b981' : '#f43f5e';
+      ctx.font = 'bold 12px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(
+        `${binanceSym.replace('USDT', '/USDT')}  $${last.close.toLocaleString(undefined, { minimumFractionDigits: 2 })}  ${isUp ? '\u25B2' : '\u25BC'}${Math.abs(changePct).toFixed(2)}%`,
+        pad.left + 4, pad.top + 14
+      );
+    }
+
+    // Alias for backwards compat
+    const refreshDynamicTechnicalChart = refreshCandlestickChart;
+
+    // ── SUI TESTNET WALLET INTEGRATION ──
+    let connectedAddress = null;
+    let connectedWalletProvider = null;
+    let connectedWalletType = null; // 'sui' | 'evm' | null
+    let connectedWalletName = null;
+    let realBalances = [];
+    let isTestnetMode = false;
+
+    async function connectSuiWallet(silent = false) {
+      const btn = document.getElementById('walletConnectText');
+      const statusText = document.getElementById('walletStatusText');
+      const pulse = document.getElementById('walletPulse');
+
+      // If already connected, disconnect
+      if (connectedAddress) {
+        connectedAddress = null;
+        connectedWalletProvider = null;
+        connectedWalletType = null;
+        connectedWalletName = null;
+        isTestnetMode = false;
+        realBalances = [];
+        btn.textContent = 'Connect Wallet';
+        statusText.textContent = 'Not Connected';
+        pulse.style.background = '#64748b';
+        pulse.style.boxShadow = 'none';
+        document.querySelector('.wallet-status-capsule').style.borderColor = 'rgba(255,255,255,0.06)';
+        document.getElementById('walletConnectBtn').style.background = '';
+        document.getElementById('walletConnectBtn').style.borderColor = '';
+        document.getElementById('walletConnectBtn').onclick = null;
+        document.getElementById('walletConnectBtn').onclick = function() { connectSuiWallet(); };
+        document.getElementById('testnetBanner').style.display = 'none';
+        document.getElementById('walletBalanceInfo').style.display = 'none';
+        document.getElementById('walletSuiBalance').textContent = '—';
+        await executeLivePriceTelemetrySync(); // revert to mock
+        return;
+      }
+
+      // Try to detect Sui Wallet extension (supports Sui Wallet, Martian, Ethos, etc.)
+      const provider = window.suiWallet || window.suiEthosWallet || (window.navigator.wallets?.get?.()?.find?.(w => w.name.includes('Sui')));
+      if (!provider) {
+        showSuccessModal('Wallet Not Found',
+          'Please install the Sui Wallet browser extension (Chrome / Firefox).',
+          '');
+        window.open('https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil', '_blank');
+        return;
+      }
+
+      try {
+        if (!silent) btn.textContent = 'Connecting...';
+        // Request permissions and get accounts
+        const permissions = await provider.request({ method: 'sia_requestPermissions' });
+        const accounts = await provider.request({ method: 'sia_getAccounts' });
+
+        if (!accounts || accounts.length === 0) {
+          throw new Error('No accounts returned from wallet');
+        }
+
+        const account = accounts[0];
+        connectedAddress = account.address || account;
+        connectedWalletProvider = provider;
+        connectedWalletType = 'sui';
+        connectedWalletName = 'Sui Wallet';
+        isTestnetMode = true;
+
+        // Update UI
+        const shortAddr = connectedAddress.slice(0, 6) + '...' + connectedAddress.slice(-4);
+        btn.textContent = 'Disconnect';
+        statusText.textContent = 'sui:' + shortAddr;
+        statusText.title = connectedAddress;
+        pulse.style.background = '#10b981';
+        pulse.style.boxShadow = '0 0 10px #10b981';
+        document.querySelector('.wallet-status-capsule').style.borderColor = 'rgba(16, 185, 129, 0.25)';
+        document.getElementById('walletConnectBtn').style.background = 'rgba(244,63,94,0.1)';
+        document.getElementById('walletConnectBtn').style.borderColor = 'rgba(244,63,94,0.2)';
+
+        // Fetch real balances from testnet
+        await fetchRealBalances();
+
+        // Update receipt modal with real address
+        document.getElementById('receiptAddressDisplay').textContent = connectedAddress;
+
+        // Show testnet banner and wallet balance
+        document.getElementById('testnetBanner').style.display = 'block';
+        document.getElementById('walletBalanceInfo').style.display = 'block';
+
+      } catch (e) {
+        console.error('Wallet connection error:', e);
+        if (!silent) {
+          btn.textContent = 'Connect Wallet';
+          showSuccessModal('Connection Failed', e.message || 'Failed to connect wallet', '');
+        }
+      }
+    }
+
+    async function fetchRealBalances() {
+      if (!connectedAddress) return;
+      try {
+        const resp = await fetch(`/api/sui/balances?address=${connectedAddress}`);
+        const data = await resp.json();
+        if (data.success) {
+          realBalances = data.balances;
+          // Re-populate portfolio with real data
+          populatePortfolioInterface();
+          // Update aggregated valuation
+          updateAggregatedValuation();
+
+          // Update SUI balance in swap card
+          const suiBal = realBalances.find(b => b.symbol === 'SUI');
+          if (suiBal) {
+            document.getElementById('walletSuiBalance').textContent = suiBal.formattedBalance + ' SUI';
+          }
+        }
+        // Also update gas info
+        await updateGasTelemetry();
+      } catch (e) {
+        console.error('Balance fetch error:', e);
+      }
+    }
+
+    async function updateGasTelemetry() {
+      try {
+        const resp = await fetch('/api/sui/rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ method: 'getReferenceGasPrice', params: [] })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          const gasPriceMist = parseInt(data.result);
+          const gasPriceSui = (gasPriceMist / 1e9).toFixed(2);
+          document.querySelector('.right-telemetry-sidebar .premium-glass-card span[style*="flex-grow:1"]').nextElementSibling.textContent = `${gasPriceMist.toLocaleString()} MIST`;
+          // Update the gas load label
+          const labels = document.querySelectorAll('.right-telemetry-sidebar .premium-glass-card span');
+          if (labels.length >= 2) labels[0].textContent = 'Sui Testnet Gas Price';
+        }
+      } catch (e) {
+        console.warn('Gas telemetry update failed:', e);
+      }
+    }
+
+    function updateAggregatedValuation() {
+      const el = document.getElementById('aggregated-fiat-valuation');
+      const delta = document.getElementById('global-portfolio-delta-percentage');
+      if (isTestnetMode && realBalances.length > 0) {
+        const total = realBalances.reduce((sum, b) => {
+          const price = coreTokenAssetRegistry[b.symbol.toLowerCase()]?.current_price || 0;
+          return sum + (parseFloat(b.formattedBalance) * price);
+        }, 0);
+        el.textContent = `$${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        delta.textContent = '➔ Live Testnet — balances fetched from Sui blockchain';
+        delta.style.color = 'var(--functional-green)';
+      }
+    }
+
+    // ── SWAP STATE ──
+    let currentSlippage = 0.5;
+    let swapQuoteTimer = null;
+
+    function setSlippage(pct) {
+      currentSlippage = pct;
+      document.querySelectorAll('.slippage-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.slippage-btn[data-slippage="${pct}"]`).classList.add('active');
+      debouncedSwapQuote();
+    }
+
+    function showSwapLoading(text) {
+      document.getElementById('swapLoadingText').textContent = text;
+      document.getElementById('swapLoadingOverlay').classList.add('active');
+    }
+
+    function hideSwapLoading() {
+      document.getElementById('swapLoadingOverlay').classList.remove('active');
+    }
+
+    async function fetchSwapQuote() {
+      const fromAsset = document.getElementById('swap-source-asset-select').value;
+      const toAsset = document.getElementById('swap-target-asset-select').value;
+      const amount = parseFloat(document.getElementById('swap-source-qty').value);
+      if (!amount || amount <= 0) return;
+
+      showSwapLoading('Fetching quote...');
+      try {
+        const resp = await fetch('/api/swap/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fromAsset, toAsset, amount, slippage: currentSlippage })
+        });
+        const data = await resp.json();
+        if (!data.success) throw new Error(data.error);
+
+        const q = data.quote;
+        document.getElementById('swap-target-qty').value = q.toAmount;
+        document.getElementById('quoteRate').textContent = `1 ${q.fromAsset} = ${q.rate} ${q.toAsset}`;
+        document.getElementById('quotePriceImpact').textContent = `${q.priceImpact}%`;
+        document.getElementById('quotePriceImpact').style.color = q.priceImpact < 1 ? '#10b981' : q.priceImpact < 3 ? '#f59e0b' : '#f43f5e';
+        document.getElementById('quoteMinReceived').textContent = `${q.minToAmount} ${q.toAsset}`;
+        document.getElementById('quoteFee').textContent = q.fees.network;
+        document.getElementById('swapQuoteDetails').style.display = 'block';
+      } catch (e) {
+        console.error('Swap quote error:', e);
+      } finally {
+        hideSwapLoading();
+      }
+    }
+
+    function debouncedSwapQuote() {
+      clearTimeout(swapQuoteTimer);
+      swapQuoteTimer = setTimeout(fetchSwapQuote, 400);
     }
 
     function invertSwapAssetParameters() {
       const sourceMenu = document.getElementById('swap-source-asset-select');
       const targetMenu = document.getElementById('swap-target-asset-select');
-      const transitoryPlaceholderString = sourceMenu.value;
-
+      const tmp = sourceMenu.value;
       sourceMenu.value = targetMenu.value;
-      targetMenu.value = transitoryPlaceholderString;
-      calculateInboundSwapPipeline();
+      targetMenu.value = tmp;
+      debouncedSwapQuote();
+    }
+
+    async function executeSwap() {
+      const fromAsset = document.getElementById('swap-source-asset-select').value;
+      const toAsset = document.getElementById('swap-target-asset-select').value;
+      const amount = parseFloat(document.getElementById('swap-source-qty').value);
+
+      if (!amount || amount <= 0) {
+        showSuccessModal('Error', 'Enter a valid amount', '');
+        return;
+      }
+
+      const btn = document.getElementById('swapExecuteBtn');
+      btn.disabled = true;
+      btn.textContent = 'Executing...';
+      showSwapLoading('Getting swap quote...');
+
+      try {
+        // Step 1: Get quote
+        const quoteResp = await fetch('/api/swap/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fromAsset, toAsset, amount, slippage: currentSlippage })
+        });
+        const quoteData = await quoteResp.json();
+        if (!quoteData.success) throw new Error(quoteData.error);
+        const q = quoteData.quote;
+
+        // Step 2: If wallet is connected, execute via testnet (real gas fees, real tx)
+        if (connectedWalletProvider && connectedAddress && connectedWalletType === 'sui') {
+          showSwapLoading('Building transaction on testnet...');
+
+          const buildResp = await fetch('/api/swap/build-tx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quote: q, sender: connectedAddress })
+          });
+          const buildData = await buildResp.json();
+          if (!buildData.success) throw new Error(buildData.error);
+
+          // Update fee display with real gas estimate
+          document.getElementById('quoteFee').textContent = buildData.gasEstimate;
+
+          showSwapLoading('Approve transaction in your wallet...');
+
+          // Build tx bytes as number array (SIA format)
+          const txBytesArray = buildData.txBytesArray || [];
+          let execResult;
+          let digest = '';
+
+          try {
+            // Try SIA interface first (Sui Wallet standard)
+            execResult = await connectedWalletProvider.request({
+              method: 'sia_signAndExecuteTransactionBlock',
+              params: [txBytesArray]
+            });
+            digest = execResult?.digest || execResult?.effects?.transactionDigest || '';
+          } catch (siaErr) {
+            try {
+              // Fallback: direct wallet method (Martian, Ethos, etc.)
+              if (typeof connectedWalletProvider.signAndExecuteTransactionBlock === 'function') {
+                execResult = await connectedWalletProvider.signAndExecuteTransactionBlock({
+                  transactionBlock: Uint8Array.from(txBytesArray)
+                });
+                digest = execResult?.digest || execResult?.effects?.transactionDigest || '';
+              } else if (typeof connectedWalletProvider.signAndExecuteTransaction === 'function') {
+                execResult = await connectedWalletProvider.signAndExecuteTransaction({
+                  transaction: Uint8Array.from(txBytesArray)
+                });
+                digest = execResult?.digest || '';
+              } else {
+                throw siaErr;
+              }
+            } catch (fallbackErr) {
+              throw new Error('Wallet signing failed. Make sure your wallet is on testnet and try again.');
+            }
+          }
+
+          hideSwapLoading();
+          const explorerUrl = `https://suiscan.xyz/testnet/tx/${digest}`;
+
+          showSuccessModal(
+            'Swap Executed on Testnet',
+            `Swapped ${amount} ${fromAsset} → ${q.toAmount} ${toAsset}\nGas: ${buildData.gasEstimate}`,
+            digest
+          );
+          addHistoryEntry(digest, `Swapped ${amount} ${fromAsset} → ${q.toAmount} ${toAsset} [testnet]`);
+
+        } else {
+          // No wallet — simulated path
+          showSwapLoading('Executing simulated transaction...');
+
+          const execResp = await fetch('/api/swap/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quote: q })
+          });
+          const execData = await execResp.json();
+
+          hideSwapLoading();
+
+          if (execData.success) {
+            showSuccessModal(
+              'Swap Successful (Simulated)',
+              `Swapped ${amount} ${fromAsset} → ${q.toAmount} ${toAsset}`,
+              execData.txHash
+            );
+            addHistoryEntry(execData.txHash, `Swapped ${amount} ${fromAsset} → ${q.toAmount} ${toAsset}`);
+          } else {
+            showSuccessModal('Transaction Failed', execData.error || 'Swap reverted', '');
+          }
+        }
+      } catch (e) {
+        hideSwapLoading();
+        showSuccessModal('Error', e.message || 'Failed to execute swap', '');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Inject Smart Liquidity Contract';
+      }
+    }
+
+    // ── SUCCESS MODAL ──
+    function showSuccessModal(title, subtitle, txHash) {
+      document.getElementById('successTitle').textContent = title;
+      document.getElementById('successSubtitle').textContent = subtitle;
+      document.getElementById('successTxHash').textContent = txHash || 'No transaction hash';
+      // Re-trigger checkmark animation
+      const checkmark = document.querySelector('.success-checkmark');
+      checkmark.style.animation = 'none';
+      void checkmark.offsetWidth;
+      checkmark.style.animation = 'drawCheck 0.6s ease 0.2s forwards';
+      document.getElementById('successOverlay').classList.add('active');
+    }
+
+    function dismissSuccessModal() {
+      document.getElementById('successOverlay').classList.remove('active');
+    }
+
+    function addHistoryEntry(txHash, description) {
+      const dest = document.getElementById('tbody-historical-logs-target');
+      const row = document.createElement('tr');
+      const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : `0x${Math.random().toString(16).substr(2, 4)}...${Math.random().toString(16).substr(2, 4)}`;
+      row.innerHTML = `
+        <td style="font-family: var(--font-mono); color: var(--accent-cyan);">${shortHash}</td>
+        <td>${description}</td>
+        <td>System pipeline consensus sync complete</td>
+        <td><span style="background: rgba(16, 185, 129, 0.12); color: var(--functional-green); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; font-family:var(--font-display);">COMMITTED</span></td>
+      `;
+      dest.insertBefore(row, dest.firstChild);
+    }
+
+    // Update broadcast calls to use success modal
+    function broadcastSimulatedTransactionBlock(msg) {
+      showSuccessModal('Transaction Confirmed', msg, `0x${Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('')}`);
     }
 
     // Dynamic QR Generator Matrix Hook
     function initializePublicQrVector() {
       const generationTargetZone = document.getElementById('qr-container-target');
       generationTargetZone.innerHTML = '';
+      const addr = connectedAddress || '0x12b39f72c184ea059124b88e2563eb38bdf8aa65';
       new QRCode(generationTargetZone, {
-        text: "sui:0x12b39f72c184ea059124b88e2563eb38bdf8aa65",
+        text: `sui:${addr}`,
         width: 160,
         height: 160,
         colorDark: "#040610",
@@ -1259,30 +1984,71 @@
       });
     }
 
-    // Broadcast Simulated Blockchain Action Framework
-    function broadcastSimulatedTransactionBlock(alertDisplayNotificationText) {
-      alert(`[BROADCAST SUCCESS] ${alertDisplayNotificationText}`);
-
-      const destinationAuditContainer = document.getElementById('tbody-historical-logs-target');
-      const interactiveTrNode = document.createElement('tr');
-      const algorithmicGeneratedHash = `0x${Math.random().toString(16).substr(2, 4)}...${Math.random().toString(16).substr(2, 4)}`;
-
-      interactiveTrNode.innerHTML = `
-        <td style="font-family: var(--font-mono); color: var(--accent-cyan);">${algorithmicGeneratedHash}</td>
-        <td>Dynamic Action Broadcast</td>
-        <td>System pipeline consensus sync complete</td>
-        <td><span style="background: rgba(16, 185, 129, 0.12); color: var(--functional-green); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; font-family:var(--font-display);">COMMITTED</span></td>
-      `;
-      destinationAuditContainer.insertBefore(interactiveTrNode, destinationAuditContainer.firstChild);
-
-      document.querySelectorAll('.modal-viewport-blur-wrapper').forEach(modal => modal.classList.remove('modal-active-state'));
-    }
-
     // Global Bootloader Initialization Hooks
     window.addEventListener('DOMContentLoaded', () => {
       executeLivePriceTelemetrySync();
-      // Execute standard intervals for pricing updates
+      fetchSwapQuote();
       setInterval(executeLivePriceTelemetrySync, 20000);
+
+      // Check if redirected from startingpage with a saved wallet
+      const savedWallet = localStorage.getItem('fluidblcx_wallet');
+      if (savedWallet) {
+        try {
+          const parsed = JSON.parse(savedWallet);
+          if (parsed.address && (Date.now() - parsed.timestamp < 60000)) { // valid for 1 min
+            localStorage.removeItem('fluidblcx_wallet');
+
+            if (parsed.type === 'sui') {
+              // Auto-connect Sui wallet
+              connectedWalletType = 'sui';
+              connectedWalletName = parsed.name || 'Sui Wallet';
+              setTimeout(() => connectSuiWallet(true), 300);
+            } else if (parsed.type === 'evm') {
+              // EVM wallet — show connected state without Sui features
+              connectedAddress = parsed.address;
+              connectedWalletType = 'evm';
+              connectedWalletName = parsed.name || 'EVM Wallet';
+              const shortAddr = connectedAddress.slice(0, 6) + '...' + connectedAddress.slice(-4);
+              document.getElementById('walletConnectText').textContent = 'Disconnect';
+              document.getElementById('walletStatusText').textContent = 'evm:' + shortAddr;
+              document.getElementById('walletStatusText').title = connectedAddress;
+              const pulse = document.getElementById('walletPulse');
+              pulse.style.background = '#a78bfa';
+              pulse.style.boxShadow = '0 0 10px #a78bfa';
+              document.querySelector('.wallet-status-capsule').style.borderColor = 'rgba(167,139,250,0.25)';
+              document.getElementById('walletConnectBtn').style.background = 'rgba(244,63,94,0.1)';
+              document.getElementById('walletConnectBtn').style.borderColor = 'rgba(244,63,94,0.2)';
+              document.getElementById('testnetBanner').style.display = 'none';
+              document.getElementById('walletBalanceInfo').style.display = 'block';
+              document.getElementById('walletSuiBalance').textContent = 'EVM Wallet — Portfolio mock data shown';
+              document.getElementById('receiptAddressDisplay').textContent = connectedAddress;
+              document.getElementById('walletConnectBtn').onclick = null;
+              document.getElementById('walletConnectBtn').onclick = function() { connectSuiWallet(); };
+            }
+          } else {
+            localStorage.removeItem('fluidblcx_wallet');
+          }
+        } catch (e) {
+          localStorage.removeItem('fluidblcx_wallet');
+        }
+      }
+
+      // Fallback: check if already connected (wallet extension already authorized)
+      if (!savedWallet) {
+        const provider = window.suiWallet;
+        if (provider) {
+          provider.request({ method: 'sia_getAccounts' }).then(accounts => {
+            if (accounts && accounts.length > 0) {
+              connectSuiWallet();
+            }
+          }).catch(() => {});
+        }
+      }
+
+      // Periodically refresh real balances
+      setInterval(() => {
+        if (connectedAddress) fetchRealBalances();
+      }, 30000);
     });
   </script>
 </body>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeepBook v3 // Portfolio Risk Terminal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+    :root {
+      --bg-main: #020617;
+      --bg-panel: #070e24;
+      --bg-card: #0b1536;
+      --bg-input: #0b1536;
+      --border: rgba(56, 189, 248, 0.08);
+      --border-focus: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #64748b;
+      --sui-blue: #38bdf8;
+      --sui-glow: rgba(56, 189, 248, 0.15);
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.15);
+      --red: #f43f5e;
+      --deep-gold: #f59e0b;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      height: 100vh;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
+
+    /* LAYOUT */
+    #app { display: grid; grid-template-rows: 44px 1fr 32px; height: 100vh; }
+
+    /* HEADER */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px;
+      position: relative;
+    }
+    header::after {
+      content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--sui-blue), var(--deep-gold), transparent);
+      opacity: 0.3;
+    }
+    .brand { font-family: var(--font-mono); font-weight: 800; font-size: 12px; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px; }
+    .brand span { background: linear-gradient(to right, #fff, var(--sui-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-meta { display: flex; align-items: center; gap: 10px; }
+    .meta-pill {
+      display: flex; align-items: center; gap: 4px;
+      font-family: var(--font-mono); font-size: 9px;
+      background: rgba(11,21,54,0.6); border: 1px solid var(--border);
+      padding: 3px 8px; border-radius: 5px; color: var(--text-muted);
+    }
+    .meta-pill .num { color: #fff; font-weight: 700; }
+    .meta-pill .num.gold { color: var(--deep-gold); }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+
+    /* MAIN GRID */
+    .workspace { display: grid; grid-template-columns: 1fr 320px; overflow: hidden; }
+    .left-col { display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border); }
+    .right-col { display: flex; flex-direction: column; overflow: hidden; background: var(--bg-panel); }
+
+    /* PANEL HEADERS */
+    .panel-hdr {
+      height: 30px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px; border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+    .panel-hdr-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; font-weight: 700; font-family: var(--font-mono); }
+    .panel-hdr-action { font-size: 9px; color: var(--sui-blue); cursor: pointer; font-family: var(--font-mono); background: none; border: none; }
+    .panel-hdr-action:hover { text-decoration: underline; }
+
+    /* CSV UPLOAD BAR */
+    .csv-bar {
+      display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.1);
+    }
+    .csv-bar .file-btn {
+      background: var(--bg-card); border: 1px dashed var(--border);
+      color: var(--text-muted); font-family: var(--font-mono); font-size: 9px;
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    }
+    .csv-bar .file-btn:hover { border-color: var(--sui-blue); color: var(--sui-blue); }
+    .csv-bar .file-info { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); flex: 1; }
+    .csv-bar .file-info strong { color: #e2e8f0; }
+
+    /* WALLET LIST */
+    .wallet-scroll { flex: 1; overflow-y: auto; padding: 4px; }
+    .wallet-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 6px; margin-bottom: 4px; overflow: hidden;
+      transition: all 0.15s; cursor: pointer;
+    }
+    .wallet-card:hover { border-color: rgba(56,189,248,0.2); }
+    .wallet-card.checked { border-color: rgba(56,189,248,0.25); background: rgba(56,189,248,0.03); }
+    .wallet-card .card-main {
+      display: grid; grid-template-columns: 1fr auto;
+      padding: 7px 10px; align-items: center; gap: 6px;
+    }
+    .wallet-card .card-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .wallet-card .card-right { display: flex; align-items: center; gap: 6px; }
+    .wallet-card .cb-wrap {
+      width: 20px; height: 20px; border: 1.5px solid var(--text-muted);
+      border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; cursor: pointer; flex-shrink: 0;
+    }
+    .wallet-card.checked .cb-wrap { border-color: #3b82f6; background: #3b82f6; }
+    .wallet-card.checked .cb-wrap::after { content: '✓'; color: #fff; font-weight: 800; font-size: 11px; }
+    .wallet-card .token-icon { width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%; }
+    .wallet-card .info { min-width: 0; }
+    .wallet-card .info .name { font-weight: 700; font-size: 11px; font-family: var(--font-mono); color: #e2e8f0; display: flex; align-items: center; gap: 4px; }
+    .wallet-card .info .name .sui-badge { font-size: 8px; color: #38bdf8; font-weight: 400; }
+    .wallet-card .info .addr { font-family: var(--font-mono); font-size: 8px; color: var(--text-muted); line-height: 1.3; }
+    .wallet-card .info .addr .tier { color: var(--deep-gold); }
+    .wallet-card .sui-value { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; text-align: right; line-height: 1.3; }
+    .wallet-card .sui-value .sui-sym { color: #38bdf8; font-size: 9px; }
+    .wallet-card .sui-value .usd-sub { font-size: 9px; color: var(--text-muted); font-weight: 400; }
+    .wallet-card .expand-toggle {
+      font-size: 8px; color: var(--text-muted); cursor: pointer;
+      transition: transform 0.2s; flex-shrink: 0;
+    }
+    .wallet-card .expand-toggle.open { transform: rotate(180deg); }
+
+    /* EXPANDABLE TOKEN DETAILS */
+    .wallet-card .token-details {
+      max-height: 0; overflow: hidden; transition: max-height 0.25s ease;
+      border-top: 1px solid transparent;
+    }
+    .wallet-card .token-details.open {
+      max-height: 180px; border-top-color: var(--border);
+      padding: 6px 10px 8px;
+    }
+    .wallet-card .token-row {
+      display: grid; grid-template-columns: 14px 28px 1fr 36px 48px;
+      align-items: center; gap: 3px;
+      padding: 2px 0; font-family: var(--font-mono); font-size: 10px;
+    }
+    .wallet-card .token-row .token-icon { width: 12px; height: 12px; flex-shrink: 0; display: block; }
+    .wallet-card .token-row .tok-name { color: #94a3b8; font-size: 9px; }
+    .wallet-card .token-row .tok-bal { color: #e2e8f0; text-align: right; font-weight: 600; font-size: 9px; }
+    .wallet-card .token-row .tok-usd { color: var(--text-muted); text-align: right; font-size: 8px; }
+    .wallet-card .token-row .tok-bar-bg {
+      height: 2px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;
+    }
+    .wallet-card .token-row .tok-bar-fill { height: 100%; border-radius: 2px; }
+
+    /* RISK SLIDER stays inside expanded area */
+    .risk-row { display: flex; align-items: center; gap: 6px; padding: 2px 10px 6px; }
+    .risk-row input[type="range"] {
+      -webkit-appearance: none; flex: 1; height: 3px;
+      background: rgba(255,255,255,0.08); border-radius: 2px; outline: none;
+    }
+    .risk-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--sui-blue); cursor: pointer;
+    }
+    .risk-row .pct { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); min-width: 28px; text-align: right; }
+
+    /* RIGHT PANEL */
+    .summary-scroll { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px;
+    }
+    .stat-card .lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono); }
+    .stat-card .val { font-family: var(--font-mono); font-weight: 700; font-size: 18px; color: #fff; margin-top: 2px; }
+    .stat-card .val.gold { color: var(--deep-gold); }
+    .stat-card .val.green { color: var(--green); }
+    .stat-card .sub { font-size: 9px; color: var(--text-muted); margin-top: 1px; font-family: var(--font-mono); }
+
+    .alloc-bar-bg { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .alloc-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--sui-blue), var(--deep-gold)); transition: width 0.3s; }
+
+    /* ACTION BUTTONS */
+    .action-stack { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding: 10px; border-top: 1px solid var(--border); }
+    .btn {
+      padding: 10px; border: none; border-radius: 5px;
+      font-family: var(--font-mono); font-weight: 700; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-exec { background: linear-gradient(135deg, var(--sui-blue), #0284c7); color: var(--bg-main); box-shadow: 0 4px 14px var(--sui-glow); }
+    .btn-exec:hover { filter: brightness(1.1); }
+    .btn-exec:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-panic { background: rgba(244,63,94,0.1); color: var(--red); border: 1px solid rgba(244,63,94,0.2); }
+    .btn-panic:hover { background: rgba(244,63,94,0.2); }
+    .btn-secondary { background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.1); color: #fff; }
+
+    /* BOTTOM STATUS */
+    .status-bar {
+      background: var(--bg-panel); border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 12px; font-family: var(--font-mono); font-size: 9px;
+      color: var(--text-muted);
+    }
+    .status-bar .dot { display: inline-block; }
+    .status-bar .stat { color: #94a3b8; }
+    .status-bar .stat strong { color: #e2e8f0; }
+
+    /* LOADING OVERLAY */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(2,6,23,0.8);
+      backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-box {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      padding: 28px; border-radius: 10px; text-align: center;
+    }
+    .loading-box .spinner {
+      width: 24px; height: 24px; border: 2px solid rgba(56,189,248,0.1);
+      border-top-color: var(--sui-blue); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-box .msg { font-family: var(--font-mono); font-size: 11px; color: #94a3b8; }
+
+    /* EMPTY STATE */
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--text-muted); padding: 20px; }
+    .empty-state svg { opacity: 0.25; width: 36px; height: 36px; }
+    .empty-state p { font-family: var(--font-mono); font-size: 10px; max-width: 240px; text-align: center; line-height: 1.5; }
+    .empty-state .btn { width: auto; padding: 8px 20px; font-size: 10px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="brand"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>DEEPBOOK // V3 PORTFOLIO RISK</span></div>
+      <div class="header-meta">
+        <div class="meta-pill"><span class="dot"></span> Testnet</div>
+        <div class="meta-pill">Wallets <span class="num" id="hdr-total-wallets">0</span></div>
+        <div class="meta-pill">Selected <span class="num gold" id="hdr-selected-wallets">0</span></div>
+        <div class="meta-pill">Portfolio <span class="num gold" id="hdr-portfolio-value">$0.00</span></div>
+        <a href="/" style="color:var(--text-muted);text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;">🏠 Home</a>
+        <a href="/security-dashboard" style="color:var(--text-muted);text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;">🛡 Security</a>
+        <a href="/walrus-vault" style="color:var(--text-muted);text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;">📦 Vault</a>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <!-- LEFT: Wallet Matrix -->
+      <div class="left-col">
+        <div class="panel-hdr">
+          <span class="panel-hdr-title">Sub-Wallet Allocation Matrix</span>
+          <div style="display:flex;gap:8px;">
+            <button class="panel-hdr-action" onclick="toggleAll(true)">Select All</button>
+            <button class="panel-hdr-action" onclick="toggleAll(false)" style="color:var(--text-muted);">Deselect</button>
+          </div>
+        </div>
+
+        <div class="csv-bar">
+          <button class="file-btn" onclick="document.getElementById('csvInput').click()">+ Load CSV</button>
+          <input type="file" id="csvInput" accept=".csv" style="display:none" onchange="loadCSV(this.files[0])" />
+          <span class="file-info" id="csvFileInfo"><strong>No file loaded</strong> — or data from login portal</span>
+          <button class="file-btn" onclick="refreshAllBalances()">⟳ Refresh</button>
+        </div>
+
+        <div class="wallet-scroll" id="walletListContainer">
+          <div class="empty-state" id="emptyState">
+            <svg width="48" height="48" fill="none" stroke="#64748b" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M8 12h8M12 8v8"/></svg>
+            <p>Upload a CSV with wallet labels or connect from the DeepBook login portal to manage your sub-wallet portfolio.</p>
+            <button class="btn btn-exec" onclick="document.getElementById('csvInput').click()">Load Wallet CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Summary -->
+      <div class="right-col">
+        <div class="panel-hdr">
+          <span class="panel-hdr-title">Portfolio Summary</span>
+        </div>
+        <div class="summary-scroll">
+          <div class="stat-card">
+            <div class="lbl">Portfolio Value <span style="color:#38bdf8;font-size:9px;">(SUI Equivalent)</span></div>
+            <div class="val gold" id="totalPortfolioValue">0.00 <span style="font-size:12px;color:#38bdf8;">SUI</span></div>
+            <div class="sub">across <span id="totalWalletsSub">0</span> wallets · <span id="hdr-selected-wallets-sub" style="color:#38bdf8;">0</span> selected</div>
+            <div class="alloc-bar-bg"><div class="alloc-bar-fill" id="allocBar" style="width:0%"></div></div>
+          </div>
+
+          <div class="stat-card">
+            <div class="lbl">Token Breakdown <span style="color:var(--text-muted);font-size:9px;">(auto-swapped → SUI)</span></div>
+            <div style="display:flex;flex-direction:column;gap:3px;margin-top:5px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:10px;">
+                <span style="display:flex;align-items:center;gap:4px;"><span id="suiIconPlaceholder"></span> SUI</span>
+                <span id="totalSuiBalance">0.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:10px;">
+                <span style="display:flex;align-items:center;gap:4px;"><span id="usdcIconPlaceholder"></span> USDC</span>
+                <span id="totalUsdcBalance">0.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:10px;">
+                <span style="display:flex;align-items:center;gap:4px;"><span id="deepIconPlaceholder"></span> DEEP</span>
+                <span id="totalDeepBalance">0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="lbl">Capital Allocation</div>
+            <div style="display:flex;flex-direction:column;gap:3px;margin-top:5px;">
+              <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;">
+                <span style="color:var(--text-muted);">Active Exposure</span>
+                <span id="activeAllocPct">0%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;">
+                <span style="color:var(--text-muted);">In Reserve</span>
+                <span id="reservedCapital">100%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;padding-top:3px;border-top:1px solid rgba(255,255,255,0.03);">
+                <span style="color:#64748b;">SUI Price</span>
+                <span id="suiPriceDisplay" style="color:#38bdf8;">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-stack">
+          <button class="btn btn-exec" id="btnExecute" onclick="pushToExecution()" disabled>→ Push Selected to Execution Terminal</button>
+          <button class="btn btn-panic" onclick="triggerPanic()">⏻ Circuit Breaker / Panic Cancel</button>
+          <button class="btn btn-secondary" onclick="window.location.href='deepbookv3login.html'">← Back to Gateway</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="status-bar">
+      <span class="dot"></span>
+      <span id="statusText">[READY] System initialized. Load wallet data to begin.</span>
+      <span class="stat" id="statusStatLeft"></span>
+      <span class="stat" id="statusStatRight" style="margin-left:auto;"></span>
+    </footer>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div class="msg" id="loadingMsg">Fetching on-chain balances...</div>
+    </div>
+  </div>
+
+  <script>
+    // ── STATE ──
+    let wallets = [];
+    let selectedIndices = new Set();
+    let balanceCache = {};
+    let usdPrices = { SUI: 0.72, USDC: 1.00, DEEP: 0.32 };
+
+    // ── INIT ──
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Fetch prices first so all calculations use live data
+      await fetchPrices();
+      injectTokenIcons();
+      // Check for data from login portal
+      const stored = localStorage.getItem('deepbook_wallets');
+      if (stored) {
+        try {
+          wallets = JSON.parse(stored);
+          wallets.forEach(w => { if (w.allocation === undefined) w.allocation = 50; });
+          const storedIdx = localStorage.getItem('deepbook_selected_indices');
+          if (storedIdx) { try { selectedIndices = new Set(JSON.parse(storedIdx)); } catch(e) { selectedIndices = new Set(wallets.map((_, i) => i)); } }
+          else { selectedIndices = new Set(wallets.map((_, i) => i)); }
+          renderWalletList();
+          updateSummary();
+          const name = localStorage.getItem('deepbook_csv_name') || 'portal data';
+          document.getElementById('csvFileInfo').innerHTML = `<strong>${name}</strong> — ${wallets.length} wallets loaded`;
+          setStatus(`[READY] ${wallets.length} wallets loaded from login portal. Fetching balances...`);
+          refreshAllBalances();
+        } catch(e) { console.warn('Failed to parse stored wallets:', e); }
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('wallets')) {
+          try {
+            wallets = JSON.parse(decodeURIComponent(params.get('wallets')));
+            wallets.forEach(w => { if (w.allocation === undefined) w.allocation = 50; });
+            selectedIndices = new Set(wallets.map((_, i) => i));
+            renderWalletList();
+            updateSummary();
+            setStatus(`[READY] ${wallets.length} wallets from URL params.`);
+            refreshAllBalances();
+          } catch(e) {}
+        }
+      }
+    });
+
+    // ── CSV LOADER ──
+    function loadCSV(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        if (lines.length < 2) { setStatus('[ERROR] CSV must have header + at least 1 data row.'); return; }
+
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const labelIdx = headers.findIndex(h => h === 'label' || h === 'name' || h === 'username' || h === 'wallet');
+        const addrIdx = headers.findIndex(h => h === 'address' || h === 'addr' || h === 'public_key' || h === 'key');
+        const allocIdx = headers.findIndex(h => h === 'allocation' || h === 'alloc' || h === 'amount');
+        const tokenIdx = headers.findIndex(h => h === 'primary_token' || h === 'token' || h === 'asset');
+        const riskIdx = headers.findIndex(h => h === 'risk_tier' || h === 'risk' || h === 'tier');
+
+        if (labelIdx === -1) { setStatus('[ERROR] CSV must have a "label" or "name" column.'); return; }
+
+        wallets = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',').map(c => c.trim());
+          const label = cols[labelIdx] || `Wallet-${i}`;
+          const rawAddr = addrIdx >= 0 ? cols[addrIdx] || '' : '';
+          const address = rawAddr.startsWith('0x') ? rawAddr : generateAddress(label, i - 1);
+          const allocation = allocIdx >= 0 ? Math.min(100, Math.max(0, parseFloat(cols[allocIdx]) || 50)) : 50;
+          const primaryToken = tokenIdx >= 0 ? cols[tokenIdx].toUpperCase() : 'SUI';
+          const riskTier = riskIdx >= 0 ? cols[riskIdx] : 'medium';
+          // Parse holdings column: {TOKEN :: amount}
+          const holdingsIdx = headers.findIndex(h => h === 'holdings' || h === 'balance_approx' || h === 'balance');
+          let holdings = {};
+          if (holdingsIdx >= 0 && cols[holdingsIdx]) {
+            const match = cols[holdingsIdx].match(/\{\s*(\w+)\s*::\s*([\d.]+)\s*\}/);
+            if (match) holdings[match[1].toUpperCase()] = parseFloat(match[2]);
+          }
+          wallets.push({ label, address, allocation, primary_token: primaryToken, riskTier, holdings, index: i - 1 });
+        }
+
+        selectedIndices = new Set(wallets.map((_, i) => i));
+        renderWalletList();
+        updateSummary();
+        document.getElementById('csvFileInfo').innerHTML = `<strong>${file.name}</strong> — ${wallets.length} wallets`;
+        localStorage.setItem('deepbook_wallets', JSON.stringify(wallets));
+        setStatus(`[READY] ${wallets.length} wallets loaded from CSV. Fetching balances...`);
+        refreshAllBalances();
+      };
+      reader.readAsText(file);
+    }
+
+    function generateAddress(label, idx) {
+      let hash = 0;
+      const str = label + idx;
+      for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+      const addr = '0x' + Math.abs(hash).toString(16).padStart(40, '0');
+      return addr;
+    }
+
+    // ── RENDER ──
+    function tokenSvgInline(coin, size) {
+      size = size || 18;
+      const s = coin.toUpperCase();
+      if (s === 'SUI') return `<svg width="${size}" height="${size}" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#4da2ff"/><path d="M16 6c-2.5 4-5 8-5 12 0 2.8 2.2 5 5 5s5-2.2 5-5c0-4-2.5-8-5-12z" fill="#fff" opacity="0.9"/><path d="M12 18c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.4"/></svg>`;
+      if (s === 'USDC') return `<svg width="${size}" height="${size}" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#2775ca"/><path d="M16 8c4.4 0 8 3.6 8 8s-3.6 8-8 8-8-3.6-8-8 3.6-8 8-8z" fill="#2775ca"/><circle cx="16" cy="16" r="6" fill="#fff"/><path d="M16 12v8M12 16h8" stroke="#2775ca" stroke-width="1.2"/></svg>`;
+      if (s === 'DEEP') return `<svg width="${size}" height="${size}" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#f59e0b"/><path d="M10 22V10l6 6-6 6z" fill="#fff" opacity="0.9"/><path d="M16 22V10l6 6-6 6z" fill="#fff" opacity="0.5"/></svg>`;
+      return '';
+    }
+
+    function injectTokenIcons() {
+      document.getElementById('suiIconPlaceholder').innerHTML = tokenSvgInline('SUI', 14);
+      document.getElementById('usdcIconPlaceholder').innerHTML = tokenSvgInline('USDC', 14);
+      document.getElementById('deepIconPlaceholder').innerHTML = tokenSvgInline('DEEP', 14);
+    }
+
+    function tokenSvg(coin) {
+      const s = coin.toUpperCase();
+      if (s === 'SUI') return '<svg class="token-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#4da2ff"/><path d="M16 6c-2.5 4-5 8-5 12 0 2.8 2.2 5 5 5s5-2.2 5-5c0-4-2.5-8-5-12z" fill="#fff" opacity="0.9"/><path d="M12 18c0 2.2 1.8 4 4 4s4-1.8 4-4" stroke="#fff" stroke-width="1.5" fill="none" opacity="0.4"/></svg>';
+      if (s === 'USDC') return '<svg class="token-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#2775ca"/><path d="M16 8c4.4 0 8 3.6 8 8s-3.6 8-8 8-8-3.6-8-8 3.6-8 8-8z" fill="#2775ca"/><circle cx="16" cy="16" r="6" fill="#fff"/><path d="M16 12v8M12 16h8" stroke="#2775ca" stroke-width="1.2"/></svg>';
+      if (s === 'DEEP') return '<svg class="token-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#f59e0b"/><path d="M10 22V10l6 6-6 6z" fill="#fff" opacity="0.9"/><path d="M16 22V10l6 6-6 6z" fill="#fff" opacity="0.5"/></svg>';
+      return '<svg class="token-icon" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#64748b"/><text x="16" y="20" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">?</text></svg>';
+    }
+
+    function renderWalletList() {
+      const container = document.getElementById('walletListContainer');
+      const empty = document.getElementById('emptyState');
+      if (wallets.length === 0) { empty.style.display = 'flex'; return; }
+      empty.style.display = 'none';
+
+      container.innerHTML = '';
+      wallets.forEach((w, i) => {
+        const checked = selectedIndices.has(i);
+        const bal = balanceCache[w.address] || {};
+        // Use server balance, fallback to CSV holdings
+        const csvH = w.holdings || {};
+        const sui = bal.SUI || csvH.SUI || 0;
+        const usdc = bal.USDC || csvH.USDC || 0;
+        const deep = bal.DEEP || csvH.DEEP || 0;
+        const primaryToken = w.primary_token || 'SUI';
+        // Calculate SUI-equivalent portfolio value
+        const suiEquiv = sui + (usdc / usdPrices.SUI) + (deep * usdPrices.DEEP / usdPrices.SUI);
+        const usdVal = sui * usdPrices.SUI + usdc * usdPrices.USDC + deep * usdPrices.DEEP;
+        const totalTokens = sui + usdc + deep;
+        const suiPct = totalTokens > 0 ? (sui / totalTokens) * 100 : 0;
+        const usdcPct = totalTokens > 0 ? (usdc / totalTokens) * 100 : 0;
+        const deepPct = totalTokens > 0 ? (deep / totalTokens) * 100 : 0;
+
+        const fmt = (n) => n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        const card = document.createElement('div');
+        card.className = `wallet-card ${checked ? 'checked' : ''}`;
+        card.id = `wallet-card-${i}`;
+        card.innerHTML = `
+          <div class="card-main">
+            <div class="card-left">
+              ${tokenSvg(primaryToken)}
+              <div class="info">
+                <div class="name">${w.label} <span class="sui-badge">${primaryToken}</span></div>
+                <div class="addr">${w.address.slice(0,6)}...${w.address.slice(-4)} <span class="tier">${w.riskTier || 'medium'}</span></div>
+              </div>
+            </div>
+            <div class="card-right">
+              <div class="sui-value">${fmt(suiEquiv)} <span class="sui-sym">SUI</span><br><span class="usd-sub">$${fmt(usdVal)}</span></div>
+              <span class="expand-toggle" data-idx="${i}">▼</span>
+              <div class="cb-wrap" data-idx="${i}"></div>
+            </div>
+          </div>
+          <div class="token-details" id="token-details-${i}">
+            <div class="token-row">
+              ${tokenSvg('SUI')} <span class="tok-name">SUI</span>
+              <span class="tok-bal">${fmt(sui)}</span>
+              <div class="tok-bar-bg"><div class="tok-bar-fill" style="width:${suiPct}%;background:#38bdf8"></div></div>
+              <span class="tok-usd">$${fmt(sui * usdPrices.SUI)}</span>
+            </div>
+            <div class="token-row">
+              ${tokenSvg('USDC')} <span class="tok-name">USDC</span>
+              <span class="tok-bal">${fmt(usdc)}</span>
+              <div class="tok-bar-bg"><div class="tok-bar-fill" style="width:${usdcPct}%;background:#a855f7"></div></div>
+              <span class="tok-usd">$${fmt(usdc * usdPrices.USDC)}</span>
+            </div>
+            <div class="token-row">
+              ${tokenSvg('DEEP')} <span class="tok-name">DEEP</span>
+              <span class="tok-bal">${fmt(deep)}</span>
+              <div class="tok-bar-bg"><div class="tok-bar-fill" style="width:${deepPct}%;background:#f59e0b"></div></div>
+              <span class="tok-usd">$${fmt(deep * usdPrices.DEEP)}</span>
+            </div>
+            <div class="risk-row" style="padding:4px 0 2px;margin:0;">
+              <span style="font-size:9px;color:var(--text-muted);font-family:var(--font-mono);">Alloc</span>
+              <input type="range" min="0" max="100" value="${w.allocation || 50}" data-idx="${i}" oninput="updateAlloc(${i}, this.value)">
+              <span class="pct">${w.allocation || 50}%</span>
+            </div>
+          </div>
+        `;
+
+        // Checkbox click (stop propagation)
+        card.querySelector('.cb-wrap').addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleWallet(i);
+        });
+        // Expand toggle
+        card.querySelector('.expand-toggle').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const details = document.getElementById(`token-details-${i}`);
+          const toggle = e.target;
+          details.classList.toggle('open');
+          toggle.classList.toggle('open');
+        });
+        // Main card click toggles selection
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.cb-wrap') || e.target.closest('.expand-toggle') || e.target.closest('.risk-row')) return;
+          toggleWallet(i);
+        });
+        container.appendChild(card);
+      });
+
+      document.getElementById('hdr-total-wallets').textContent = wallets.length;
+      document.getElementById('hdr-selected-wallets').textContent = selectedIndices.size;
+    }
+
+    function toggleWallet(idx) {
+      if (selectedIndices.has(idx)) selectedIndices.delete(idx);
+      else selectedIndices.add(idx);
+      renderWalletList();
+      updateSummary();
+    }
+
+    function toggleAll(select) {
+      if (select) selectedIndices = new Set(wallets.map((_, i) => i));
+      else selectedIndices = new Set();
+      renderWalletList();
+      updateSummary();
+    }
+
+    function updateAlloc(idx, val) {
+      wallets[idx].allocation = parseInt(val);
+      renderWalletList();
+      updateSummary();
+    }
+
+    // ── BALANCE FETCH ──
+    async function refreshAllBalances() {
+      if (wallets.length === 0) return;
+      showLoading('Fetching on-chain balances from Sui testnet...');
+      let total = 0;
+      for (const w of wallets) {
+        try {
+          const resp = await fetch(`/api/sui/balances?address=${w.address}`);
+          const data = await resp.json();
+          if (data.success && data.balances && data.balances.length > 0) {
+            const b = {};
+            data.balances.forEach(bal => {
+              const sym = bal.symbol;
+              b[sym] = parseFloat(bal.formattedBalance) || 0;
+            });
+            balanceCache[w.address] = b;
+          }
+        } catch(e) {
+          // Silently skip — CSV holdings used as fallback
+        }
+        total++;
+        if (total % 5 === 0) setStatus(`[FETCH] ${total}/${wallets.length} wallets...`);
+      }
+      hideLoading();
+      renderWalletList();
+      updateSummary();
+      setStatus(`[READY] Balances updated for ${wallets.length} wallets.`);
+    }
+
+    async function fetchPrices() {
+      try {
+        const resp = await fetch('/api/prices');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (data.success) {
+          data.assets.forEach(a => { usdPrices[a.symbol] = a.price_usd; });
+        }
+      } catch(e) {
+        console.warn('Price fetch failed, using defaults:', e.message);
+      }
+      // Always update the price display element after any fetch attempt
+      const el = document.getElementById('suiPriceDisplay');
+      if (el) el.textContent = `$${usdPrices.SUI.toFixed(4)}`;
+    }
+
+    // ── SUMMARY ──
+    function updateSummary() {
+      let totalSui = 0, totalUsdc = 0, totalDeep = 0;
+      let totalValueUsd = 0;
+      let totalValueSui = 0;
+      let activeAlloc = 0;
+
+      wallets.forEach((w, i) => {
+        if (!selectedIndices.has(i)) return;
+        const bal = balanceCache[w.address] || {};
+        const csvH = w.holdings || {};
+        const sui = bal.SUI || csvH.SUI || 0;
+        const usdc = bal.USDC || csvH.USDC || 0;
+        const deep = bal.DEEP || csvH.DEEP || 0;
+        totalSui += sui;
+        totalUsdc += usdc;
+        totalDeep += deep;
+        totalValueUsd += sui * usdPrices.SUI + usdc * usdPrices.USDC + deep * usdPrices.DEEP;
+        activeAlloc += (w.allocation || 50) / 100;
+      });
+
+      // SUI-equivalent: auto-swap all non-SUI tokens to SUI value
+      totalValueSui = totalSui + (totalUsdc / usdPrices.SUI) + (totalDeep * usdPrices.DEEP / usdPrices.SUI);
+
+      const avgAlloc = selectedIndices.size > 0 ? (activeAlloc / selectedIndices.size) * 100 : 0;
+      const suiPrice = usdPrices.SUI || 0.72;
+      const suiPriceEl = document.getElementById('suiPriceDisplay');
+      if (suiPriceEl) suiPriceEl.textContent = `$${suiPrice.toFixed(4)}`;
+
+      document.getElementById('totalPortfolioValue').innerHTML = `${totalValueSui.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} <span style="font-size:12px;color:#38bdf8;">SUI</span>`;
+      document.getElementById('totalWalletsSub').textContent = selectedIndices.size;
+      document.getElementById('totalSuiBalance').innerHTML = `${totalSui.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} <span style="color:#38bdf8;">SUI</span> <span style="color:var(--text-muted);font-size:9px;">$${(totalSui * suiPrice).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+      document.getElementById('totalUsdcBalance').innerHTML = `${totalUsdc.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} <span style="color:#a855f7;">USDC</span> <span style="color:var(--text-muted);font-size:9px;">↻ ${(totalUsdc / suiPrice).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} SUI</span>`;
+      document.getElementById('totalDeepBalance').innerHTML = `${totalDeep.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} <span style="color:#f59e0b;">DEEP</span> <span style="color:var(--text-muted);font-size:9px;">↻ ${(totalDeep * (usdPrices.DEEP || 0.32) / suiPrice).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} SUI</span>`;
+      document.getElementById('allocBar').style.width = `${Math.min(avgAlloc, 100)}%`;
+      document.getElementById('activeAllocPct').innerHTML = `${avgAlloc.toFixed(0)}% <span style="color:var(--text-muted);font-size:8px;">alloc</span>`;
+      document.getElementById('reservedCapital').innerHTML = `${(100 - avgAlloc).toFixed(0)}% <span style="color:var(--text-muted);font-size:8px;">reserve</span>`;
+      document.getElementById('hdr-portfolio-value').innerHTML = `${totalValueSui.toFixed(0)} <span style="color:#38bdf8;font-size:10px;">SUI</span>`;
+      document.getElementById('hdr-selected-wallets').textContent = selectedIndices.size;
+
+      const btn = document.getElementById('btnExecute');
+      btn.disabled = selectedIndices.size === 0;
+    }
+
+    // ── ACTIONS ──
+    function pushToExecution() {
+      if (selectedIndices.size === 0) return;
+      const selected = wallets.filter((_, i) => selectedIndices.has(i));
+      sessionStorage.setItem('deepbook_selected_wallets', JSON.stringify(selected));
+      setStatus(`[NAV] Pushing ${selected.length} wallets to execution terminal...`);
+      window.location.href = 'Deepbookv3.html';
+    }
+
+    async function triggerPanic() {
+      if (wallets.length === 0) { setStatus('[PANIC] No wallets loaded.'); return; }
+      if (!confirm('PANIC: Cancel all open orders and sweep funds? This cannot be undone.')) return;
+      showLoading('Executing circuit breaker across wallets...');
+      setStatus(`[PANIC] Sending cancel-all signals to ${wallets.length} wallets...`);
+      let done = 0, failed = 0;
+      for (const w of wallets) {
+        try {
+          const resp = await fetch('/api/swap/cancel-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: w.address, label: w.label })
+          });
+          const data = await resp.json();
+          if (data.success) done++; else failed++;
+        } catch (e) { failed++; }
+      }
+      hideLoading();
+      setStatus(`[PANIC] ${done} wallets cancelled${failed > 0 ? `, ${failed} failed` : ''}. Funds swept.`);
+    }
+
+    // ── UTILS ──
+    function showLoading(msg) {
+      document.getElementById('loadingMsg').textContent = msg || 'Processing...';
+      document.getElementById('loadingOverlay').classList.add('show');
+    }
+    function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+    function setStatus(msg) { document.getElementById('statusText').textContent = msg; }
+  </script>
+</body>
+</html>

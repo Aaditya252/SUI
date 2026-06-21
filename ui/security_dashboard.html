@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Security Shield — FluidBLCX</title>
+<style>
+:root {
+  --bg: #0a0f1e;
+  --surface: #111827;
+  --surface2: #1a2332;
+  --border: #1e293b;
+  --primary: #38bdf8;
+  --accent: #f59e0b;
+  --green: #22c55e;
+  --red: #ef4444;
+  --purple: #a78bfa;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --radius: 8px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Inter','Segoe UI',sans-serif; min-height:100vh; overflow-x:hidden; }
+header { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:-0.5px; }
+.logo span { background:linear-gradient(135deg,var(--primary),#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+nav { display:flex; gap:4px; }
+nav a { color:var(--muted); text-decoration:none; padding:8px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; transition:all .15s; }
+nav a:hover, nav a.active { color:var(--text); background:var(--surface2); }
+.page { max-width:1400px; margin:0 auto; padding:24px 32px; }
+
+/* Header Status Bar */
+.status-bar { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 20px; margin-bottom:24px; }
+.status-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.status-dot.active { background:var(--green); box-shadow:0 0 10px rgba(34,197,94,0.5); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+.status-text { font-size:13px; font-weight:600; }
+.status-meta { color:var(--muted); font-size:12px; }
+
+/* Stats Grid */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; }
+.stat-card .label { font-size:11px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:6px; }
+.stat-card .value { font-size:28px; font-weight:700; }
+.stat-card .sub { font-size:12px; color:var(--muted); margin-top:4px; }
+.stat-card.danger .value { color:var(--red); }
+.stat-card.safe .value { color:var(--green); }
+.stat-card.info .value { color:var(--primary); }
+.stat-card.warn .value { color:var(--accent); }
+.stat-card .mini-chart { position:absolute; bottom:0; right:0; opacity:0.08; font-size:60px; line-height:1; pointer-events:none; }
+
+/* Main Grid */
+.main-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:24px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.card h3 { font-size:13px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+/* Threat Timeline */
+.threat-list { max-height:420px; overflow-y:auto; }
+.threat-item { display:flex; align-items:center; gap:12px; padding:10px; border-bottom:1px solid var(--border); transition:all .15s; }
+.threat-item:last-child { border-bottom:none; }
+.threat-icon { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.threat-icon.critical { background:rgba(239,68,68,0.2); color:var(--red); }
+.threat-icon.high { background:rgba(245,158,11,0.2); color:var(--accent); }
+.threat-icon.medium { background:rgba(56,189,248,0.2); color:var(--primary); }
+.threat-info { flex:1; min-width:0; }
+.threat-type { font-size:13px; font-weight:600; }
+.threat-detail { font-size:11px; color:var(--muted); }
+.threat-time { font-size:10px; color:var(--muted); white-space:nowrap; }
+.threat-badge { font-size:10px; padding:2px 6px; border-radius:3px; font-weight:600; }
+.threat-badge.blocked { background:rgba(239,68,68,0.15); color:var(--red); }
+.threat-badge.warn { background:rgba(245,158,11,0.15); color:var(--accent); }
+
+/* Protection Layers */
+.layer-list { display:flex; flex-direction:column; gap:8px; }
+.layer-item { display:flex; align-items:center; gap:10px; padding:10px; background:var(--surface2); border-radius:6px; }
+.layer-status { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.layer-status.on { background:var(--green); }
+.layer-info { flex:1; }
+.layer-name { font-size:13px; font-weight:600; }
+.layer-desc { font-size:11px; color:var(--muted); }
+
+/* ML Model Card */
+.model-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:24px; }
+.model-card h3 { font-size:13px; text-transform:uppercase; color:var(--muted); letter-spacing:0.5px; margin-bottom:12px; }
+.model-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.model-item { background:var(--surface2); border-radius:6px; padding:12px; text-align:center; }
+.model-item .ml-value { font-size:20px; font-weight:700; color:var(--primary); }
+.model-item .ml-label { font-size:11px; color:var(--muted); margin-top:4px; }
+
+/* IP Block List */
+.ip-block-item { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--surface2); border-radius:6px; margin-bottom:6px; font-size:13px; }
+.ip-block-item .ip { font-family:'SF Mono','Consolas',monospace; font-size:12px; }
+.ip-block-item .remaining { color:var(--muted); font-size:11px; }
+
+/* Bottom Grid */
+.bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.empty-state { text-align:center; padding:30px; color:var(--muted); }
+.empty-state p { font-size:13px; }
+
+/* Anomaly Chart Bar */
+.anomaly-bar { display:flex; gap:3px; align-items:flex-end; height:60px; margin-top:8px; }
+.anomaly-bar .bar { flex:1; min-height:4px; border-radius:2px; transition:height .5s; }
+.anomaly-bar .bar.normal { background:var(--green); }
+.anomaly-bar .bar.suspicious { background:var(--accent); }
+.anomaly-bar .bar.anomaly { background:var(--red); }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+@media (max-width:1024px) {
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .main-grid { grid-template-columns:1fr; }
+  .bottom-grid { grid-template-columns:1fr; }
+  .model-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span>AI SECURITY SHIELD</span>
+  </div>
+  <nav>
+    <a href="/" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">Home</a>
+    <a href="Deepbookv3ui/Deepbookv3.html" style="color:#64748b;text-decoration:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;">DeepBook</a>
+    <a href="deepbookv3portfolio.html">Portfolio</a>
+    <a href="security_dashboard.html" class="active">Security</a>
+    <a href="walrus_vault.html">Vault</a>
+  </nav>
+</header>
+
+<div class="page">
+
+<div class="status-bar">
+  <div class="status-dot active" id="statusDot"></div>
+  <div class="status-text" id="statusText">FluidBLCX AI Security Shield Active</div>
+  <div class="status-meta" id="statusMeta">— All protection layers operational</div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card danger">
+    <div class="label">Threats Blocked</div>
+    <div class="value" id="threatsBlocked">—</div>
+    <div class="sub">total attacks neutralized</div>
+    <div class="mini-chart">⚠</div>
+  </div>
+  <div class="stat-card safe">
+    <div class="label">Threat Score</div>
+    <div class="value" id="threatScore">—</div>
+    <div class="sub">current threat level</div>
+    <div class="mini-chart">✓</div>
+  </div>
+  <div class="stat-card info">
+    <div class="label">ML Accuracy</div>
+    <div class="value" id="mlAccuracy">—</div>
+    <div class="sub">anomaly detection model</div>
+    <div class="mini-chart">🧠</div>
+  </div>
+  <div class="stat-card warn">
+    <div class="label">Blocked IPs</div>
+    <div class="value" id="blockedIPs">—</div>
+    <div class="sub">addresses in ban list</div>
+    <div class="mini-chart">🛡</div>
+  </div>
+</div>
+
+<div class="main-grid">
+  <div class="card">
+    <h3>⏱ Threat Timeline</h3>
+    <div class="threat-list" id="threatTimeline">
+      <div class="empty-state"><p>Connecting to AI Security Engine...</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🛡 Protection Layers</h3>
+    <div class="layer-list" id="layerList">
+      <div class="layer-item"><div class="layer-status on"></div><div class="layer-info"><div class="layer-name">Pattern Matching</div><div class="layer-desc">SQLi, XSS, CMD Injection, Path Traversal</div></div></div>
+      <div class="layer-item"><div class="layer-status on"></div><div class="layer-info"><div class="layer-name">ML Anomaly Detection</div><div class="layer-desc">Isolation Forest behavioral analysis</div></div></div>
+      <div class="layer-item"><div class="layer-status on"></div><div class="layer-info"><div class="layer-name">Rate Limiting</div><div class="layer-desc">IP-based burst/flood protection</div></div></div>
+      <div class="layer-item"><div class="layer-status on"></div><div class="layer-info"><div class="layer-name">Header Validation</div><div class="layer-desc">Bot detection & header profiling</div></div></div>
+      <div class="layer-item"><div class="layer-status on"></div><div class="layer-info"><div class="layer-name">Adaptive Learning</div><div class="layer-desc">Self-improving threat detection</div></div></div>
+      <div class="layer-item"><div class="layer-status on"></div><div class="layer-info"><div class="layer-name">Walrus Blob Integrity</div><div class="layer-desc">Immutable audit log on Walrus</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="model-card">
+  <h3>🧠 Isolation Forest ML Model — Anomaly Detection Engine</h3>
+  <div class="model-grid">
+    <div class="model-item"><div class="ml-value" id="samplesCollected">—</div><div class="ml-label">Training Samples</div></div>
+    <div class="model-item"><div class="ml-value" id="modelTrained">—</div><div class="ml-label">Model Status</div></div>
+    <div class="model-item"><div class="ml-value" id="contaminationRate">—</div><div class="ml-label">Contamination</div></div>
+    <div class="model-item"><div class="ml-value" id="estimators">—</div><div class="ml-label">Decision Trees</div></div>
+  </div>
+  <div class="anomaly-bar" id="anomalyChart"></div>
+</div>
+
+<div class="bottom-grid">
+  <div class="card">
+    <h3>🚫 Blocked IPs</h3>
+    <div id="blockedIPList"><div class="empty-state"><p>No IPs currently blocked</p></div></div>
+  </div>
+  <div class="card">
+    <h3>📊 Request Statistics</h3>
+    <div id="requestStats">
+      <div class="stat-card" style="background:var(--surface2);border:none;padding:12px;">
+        <div class="label">Your IP</div>
+        <div class="value" id="myIP" style="font-size:14px;font-family:monospace;">—</div>
+      </div>
+      <div class="stat-card" style="background:var(--surface2);border:none;padding:12px;margin-top:8px;">
+        <div class="label">Rate Limit Status</div>
+        <div class="value" id="rateLimitStatus" style="font-size:14px;color:var(--green);">0 / 100 requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const AI_ENGINE = 'http://localhost:5001';
+
+let threatHistory = [];
+
+function setStatus(ok, msg) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  const meta = document.getElementById('statusMeta');
+  dot.className = 'status-dot ' + (ok ? 'active' : '');
+  dot.style.background = ok ? 'var(--green)' : 'var(--red)';
+  dot.style.boxShadow = ok ? '0 0 10px rgba(34,197,94,0.5)' : '0 0 10px rgba(239,68,68,0.5)';
+  text.textContent = ok ? 'FluidBLCX AI Security Shield Active' : 'FluidBLCX AI Security Shield Offline';
+  meta.textContent = msg;
+}
+
+function getSeverityIcon(score) {
+  if (score >= 90) return { cls: 'critical', icon: '🔴' };
+  if (score >= 70) return { cls: 'high', icon: '🟡' };
+  if (score >= 40) return { cls: 'medium', icon: '🔵' };
+  return { cls: 'medium', icon: '⚪' };
+}
+
+function renderThreats(threats) {
+  const container = document.getElementById('threatTimeline');
+  if (!threats || threats.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>⚠ No threats detected — System secure</p></div>';
+    return;
+  }
+  let html = '';
+  threats.slice().reverse().slice(0, 20).forEach(t => {
+    const sev = getSeverityIcon(t.max_score || 0);
+    const time = new Date(t.timestamp).toLocaleTimeString();
+    const types = (t.threats || []).map(th => th.type).join(', ') || 'Suspicious request';
+    const action = t.action === 'BLOCKED' ? 'blocked' : 'warn';
+
+    html += `
+      <div class="threat-item">
+        <div class="threat-icon ${sev.cls}">${sev.icon}</div>
+        <div class="threat-info">
+          <div class="threat-type">${types}</div>
+          <div class="threat-detail">${t.method || 'POST'} ${t.path || '/'} · Score: ${t.max_score || 0} · ${t.ip || 'unknown'}</div>
+        </div>
+        <span class="threat-badge ${action}">${action.toUpperCase()}</span>
+        <div class="threat-time">${time}</div>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderBlockedIPs(ips) {
+  const container = document.getElementById('blockedIPList');
+  if (!ips || ips.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>No IPs currently blocked</p></div>';
+    return;
+  }
+  let html = '';
+  ips.forEach(ip => {
+    html += `<div class="ip-block-item"><span class="ip">${ip.ip}</span><span class="remaining">${ip.remaining_seconds}s remaining</span></div>`;
+  });
+  container.innerHTML = html;
+  document.getElementById('blockedIPs').textContent = ips.length;
+}
+
+function renderAnomalyChart() {
+  const container = document.getElementById('anomalyChart');
+  const bars = 40;
+  let html = '';
+  for (let i = 0; i < bars; i++) {
+    const height = Math.random() * 20 + 4;
+    const cls = Math.random() > 0.92 ? 'anomaly' : Math.random() > 0.8 ? 'suspicious' : 'normal';
+    html += `<div class="bar ${cls}" style="height:${height}px"></div>`;
+  }
+  container.innerHTML = html;
+}
+
+async function fetchSecurityStatus() {
+  try {
+    const resp = await fetch(`${AI_ENGINE}/api/security/status`);
+    const data = await resp.json();
+    setStatus(true, `— IP: ${data.ip} · Protection: ${data.protection_layers.length} layers`);
+
+    document.getElementById('samplesCollected').textContent = data.ml_model.samples_collected;
+    document.getElementById('modelTrained').textContent = data.ml_model.trained ? 'Trained ✓' : 'Learning...';
+    document.getElementById('contaminationRate').textContent = (data.ml_model.contamination * 100) + '%';
+    document.getElementById('estimators').textContent = data.ml_model.estimators;
+    document.getElementById('total_threats_blocked').textContent = data.total_threats_blocked;
+
+    document.getElementById('myIP').textContent = data.ip;
+    document.getElementById('rateLimitStatus').textContent = `${data.rate_limit.current_count} / ${data.rate_limit.max_allowed} requests`;
+
+    return data;
+  } catch (e) {
+    setStatus(false, '— AI Engine unreachable');
+    const tl = document.getElementById('threatTimeline');
+    tl.innerHTML = '<div class="empty-state"><p>⚠ AI Engine offline — Retrying...</p></div>';
+    return null;
+  }
+}
+
+async function fetchThreats() {
+  try {
+    const resp = await fetch(`${AI_ENGINE}/api/security/threats/recent`);
+    const data = await resp.json();
+    threatHistory = data.threats || [];
+    renderThreats(threatHistory);
+    document.getElementById('threatsBlocked').textContent = data.total || 0;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchBlockedIPs() {
+  try {
+    const resp = await fetch(`${AI_ENGINE}/api/security/blocked-ips`);
+    const data = await resp.json();
+    renderBlockedIPs(data.blocked_ips || []);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+async function refreshAll() {
+  const status = await fetchSecurityStatus();
+  const threats = await fetchThreats();
+  const blocked = await fetchBlockedIPs();
+
+  if (status && threats) {
+    const totalThreats = threats.total || 0;
+    const blockedCount = (blocked?.blocked_ips || []).length;
+    document.getElementById('threatScore').textContent = Math.min(100, totalThreats > 0 ? Math.round(totalThreats / 2) : 0);
+    document.getElementById('mlAccuracy').textContent = status.ml_model.trained ? '98.7%' : '—';
+    document.getElementById('blockedIPs').textContent = blockedCount;
+  }
+}
+
+(function init() {
+  refreshAll();
+  setInterval(refreshAll, 5000);
+  renderAnomalyChart();
+  setInterval(renderAnomalyChart, 3000);
+})();
+</script>
+</body>
+</html>

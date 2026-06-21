@@ -730,8 +730,11 @@
             <nav class="nav-features-center">
                 <span class="nav-link active">Home</span>
                 <a href="compiler.html" class="nav-link">Compiler</a>
-                <span class="nav-link">DeepBook v3</span>
-                <span class="nav-link">Walrus Vault</span>
+                <a href="Deepbookv3ui/Deepbookv3.html" class="nav-link">DeepBook v3</a>
+                <a href="Deepbookv3ui/deepbookv3login.html" class="nav-link">Login</a>
+                <a href="Deepbookv3ui/deepbookv3portfolio.html" class="nav-link">Portfolio</a>
+                <a href="/security-dashboard" class="nav-link">Security</a>
+                <a href="/walrus-vault" class="nav-link">Vault</a>
             </nav>
 
             <div class="nav-controls-right">
@@ -882,6 +885,163 @@
 
         closeWalletBtn.addEventListener('click', dismissWalletSide);
         walletOverlay.addEventListener('click', dismissWalletSide);
+
+        /* ── WALLET CONNECTION ENGINE ── */
+        // Wallet configuration: detect provider, connect, install URL
+        const WALLET_CONFIGS = {
+            'Sui Wallet': {
+                detect: () => window.suiWallet || window.suiEthosWallet || (window.navigator.wallets?.get?.()?.find?.(w => w.name.includes('Sui'))),
+                connect: async (provider) => {
+                    const permissions = await provider.request({ method: 'sia_requestPermissions' });
+                    const accounts = await provider.request({ method: 'sia_getAccounts' });
+                    const account = accounts?.[0];
+                    return account?.address || account || null;
+                },
+                installUrl: 'https://chrome.google.com/webstore/detail/sui-wallet/opcgpfmipidbgpenhmajoajpbobppdil',
+                badge: 'Native',
+                type: 'sui'
+            },
+            'MetaMask Wallet': {
+                detect: () => window.ethereum,
+                connect: async (provider) => {
+                    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                    return accounts?.[0] || null;
+                },
+                installUrl: 'https://metamask.io/download/',
+                badge: 'EVM',
+                type: 'evm'
+            },
+            'Coinbase Wallet': {
+                detect: () => window.coinbaseWallet || (window.ethereum?.isCoinbaseWallet ? window.ethereum : null),
+                connect: async (provider) => {
+                    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                    return accounts?.[0] || null;
+                },
+                installUrl: 'https://www.coinbase.com/wallet/download',
+                badge: 'EVM',
+                type: 'evm'
+            },
+            'Trust Wallet': {
+                detect: () => window.trustwallet || (window.ethereum?.isTrust ? window.ethereum : null),
+                connect: async (provider) => {
+                    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                    return accounts?.[0] || null;
+                },
+                installUrl: 'https://trustwallet.com/download',
+                badge: 'EVM',
+                type: 'evm'
+            },
+            'Binance Wallet': {
+                detect: () => window.BinanceChain || window.binanceWallet || (window.ethereum?.isBinance ? window.ethereum : null),
+                connect: async (provider) => {
+                    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                    return accounts?.[0] || null;
+                },
+                installUrl: 'https://www.binance.com/en/binance-wallet',
+                badge: 'EVM',
+                type: 'evm'
+            }
+        };
+
+        async function connectWallet(walletName) {
+            const config = WALLET_CONFIGS[walletName];
+            if (!config) return;
+
+            const provider = config.detect();
+            const optEl = [...document.querySelectorAll('.wallet-side-option')].find(
+                el => el.querySelector('.wallet-side-name')?.textContent === walletName
+            );
+            const nameEl = optEl?.querySelector('.wallet-side-name');
+            const badgeEl = optEl?.querySelector('.wallet-side-badge');
+            const origName = nameEl?.textContent;
+            const origBadge = badgeEl?.textContent;
+
+            if (!provider) {
+                if (nameEl) nameEl.textContent = 'Install ↗';
+                if (badgeEl) badgeEl.textContent = 'Not Found';
+                optEl && (optEl.style.borderColor = 'rgba(239,68,68,0.3)');
+                setTimeout(() => {
+                    if (origName && nameEl) nameEl.textContent = origName;
+                    if (badgeEl) badgeEl.textContent = origBadge || config.badge;
+                    optEl && (optEl.style.borderColor = '');
+                    window.open(config.installUrl, '_blank');
+                }, 400);
+                return;
+            }
+
+            const oldBtnHtml = connectWalletBtn.innerHTML;
+            try {
+                connectWalletBtn.innerHTML = 'Connecting...';
+                connectWalletBtn.disabled = true;
+
+                const address = await config.connect(provider);
+                if (!address) throw new Error('No accounts returned from wallet');
+
+                // Save to localStorage for wallet1.html
+                localStorage.setItem('fluidblcx_wallet', JSON.stringify({
+                    address,
+                    name: walletName,
+                    type: config.type,
+                    timestamp: Date.now()
+                }));
+
+                // Show connected state briefly
+                connectWalletBtn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                        <polyline points="4,13 9,18 20,6" />
+                    </svg>
+                    Connected
+                `;
+                connectWalletBtn.style.background = 'rgba(16,185,129,0.15)';
+                connectWalletBtn.style.borderColor = 'rgba(16,185,129,0.3)';
+                connectWalletBtn.style.color = '#10b981';
+
+                dismissWalletSide();
+
+                // Highlight the connected wallet option
+                if (optEl) {
+                    optEl.style.borderColor = 'rgba(16,185,129,0.5)';
+                    optEl.style.background = 'rgba(16,185,129,0.05)';
+                }
+
+                setTimeout(() => {
+                    window.location.href = 'wallet1.html';
+                }, 600);
+
+            } catch (e) {
+                console.error('Wallet connection error:', e);
+                connectWalletBtn.innerHTML = oldBtnHtml || 'Connect Wallet';
+                connectWalletBtn.disabled = false;
+                if (nameEl) nameEl.textContent = 'Failed';
+                if (badgeEl) badgeEl.textContent = 'Error';
+                setTimeout(() => {
+                    if (origName && nameEl) nameEl.textContent = origName;
+                    if (badgeEl) badgeEl.textContent = origBadge || config.badge;
+                }, 1500);
+            }
+        }
+
+        // Attach click handlers to each wallet option
+        document.querySelectorAll('.wallet-side-option').forEach(opt => {
+            opt.style.cursor = 'pointer';
+            opt.addEventListener('click', () => {
+                const name = opt.querySelector('.wallet-side-name')?.textContent;
+                if (name && WALLET_CONFIGS[name]) {
+                    connectWallet(name);
+                }
+            });
+        });
+
+        // Handle image loading errors for wallet icons
+        document.querySelectorAll('.wallet-side-brand-icon img').forEach(img => {
+            img.addEventListener('error', function() {
+                const parent = this.parentElement;
+                const name = parent.parentElement.querySelector('.wallet-side-name')?.textContent || '?';
+                this.style.display = 'none';
+                parent.style.fontSize = '14px';
+                parent.textContent = name.slice(0, 2).toUpperCase();
+            });
+        });
 
         /* ── TYPING SEQUENCE CONTROLLER ── */
         const line1Str = "Intent-Driven";

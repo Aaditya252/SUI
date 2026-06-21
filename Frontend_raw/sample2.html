@@ -1,0 +1,1290 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepBook v3 // Institutional Liquidity & Matching Engine</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-main: #020617;
+      --bg-panel: #070e24;
+      --bg-input: #0b1536;
+      --bg-dropdown: #09122c;
+      --border: rgba(56, 189, 248, 0.08);
+      --border-focus: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #64748b;
+      --sui-blue: #38bdf8;
+      --sui-glow: rgba(56, 189, 248, 0.15);
+      --green: #10b981;
+      --green-glow: rgba(16, 185, 129, 0.15);
+      --red: #f43f5e;
+      --red-glow: rgba(244, 63, 94, 0.15);
+      --deep-gold: #f59e0b;
+      --deep-glow: rgba(245, 158, 11, 0.15);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #terminal-wrapper {
+      display: grid;
+      grid-template-rows: 56px 1fr 260px;
+      height: 100vh;
+    }
+
+    /* TIER 1: CORE TELEMETRY STRIP */
+    header.top-telemetry-strip {
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+      position: relative;
+    }
+
+    header.top-telemetry-strip::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--sui-blue), var(--deep-gold), transparent);
+      opacity: 0.4;
+    }
+
+    .branding-cluster {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .branding-title {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.15em;
+      background: linear-gradient(to right, #ffffff, var(--sui-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .engine-status-tag {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--green);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      animation: pulse-border 2s infinite ease-in-out;
+    }
+
+    .live-tickers-strip {
+      display: flex;
+      gap: 28px;
+      border-left: 1px solid var(--border);
+      padding-left: 24px;
+    }
+
+    .ticker-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tick-lbl {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+
+    .tick-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .tick-val.sui {
+      color: var(--sui-blue);
+    }
+
+    .tick-val.deep {
+      color: var(--deep-gold);
+    }
+
+    .tick-val.green {
+      color: var(--green);
+    }
+
+    .balance-manager-badge {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(11, 21, 54, 0.6);
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .bm-meta {
+      font-family: var(--font-mono);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bm-title {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .bm-id {
+      font-weight: 700;
+      color: #e2e8f0;
+      font-size: 11px;
+    }
+
+    /* TIER 2: COHESIVE SYSTEM MATRIX */
+    .core-workspace {
+      display: grid;
+      grid-template-columns: 340px 1fr 320px;
+      overflow: hidden;
+    }
+
+    .panel-shelf {
+      background-color: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header-tab {
+      height: 40px;
+      border-bottom: 1px solid var(--border);
+      background-color: rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      justify-content: space-between;
+    }
+
+    .panel-header-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #94a3b8;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .scrollable-config-box {
+      padding: 16px;
+      overflow-y: auto;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* EXECUTION MATRIX & METHOD TABS */
+    .execution-toggle-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .exec-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 0;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10px;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      font-family: var(--font-mono);
+    }
+
+    .exec-toggle-btn.active {
+      background-color: var(--sui-blue);
+      color: var(--bg-main);
+      box-shadow: 0 2px 8px var(--sui-glow);
+    }
+
+    .exec-toggle-btn.flash.active {
+      background-color: var(--deep-gold);
+      color: var(--bg-main);
+      box-shadow: 0 2px 8px var(--deep-glow);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-housing {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      transition: all 0.2s ease;
+    }
+
+    .input-housing:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+    }
+
+    .input-housing input {
+      background: transparent;
+      border: none;
+      outline: none;
+      height: 36px;
+      width: 100%;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .input-housing select {
+      background-color: transparent;
+      color: #ffffff;
+      border: none;
+      outline: none;
+      height: 36px;
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .input-housing select option {
+      background-color: var(--bg-dropdown);
+      color: #fff;
+    }
+
+    /* PTB BUNDLE CONSOLE */
+    .ptb-matrix-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .ptb-chain-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .ptb-chain-node:last-child {
+      border-bottom: none;
+    }
+
+    .ptb-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ptb-step-num {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--sui-blue);
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    .ptb-label {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* Switch Style Component */
+    .switch-ui {
+      position: relative;
+      display: inline-block;
+      width: 32px;
+      height: 18px;
+    }
+
+    .switch-ui input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-ui {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .2s;
+      border-radius: 18px;
+    }
+
+    .slider-ui:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider-ui {
+      background-color: var(--sui-blue);
+    }
+
+    input:checked+.slider-ui:before {
+      transform: translateX(14px);
+    }
+
+    .action-trigger-btn {
+      width: 100%;
+      padding: 14px 0;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: all 0.2s ease;
+      margin-top: auto;
+    }
+
+    .action-trigger-btn.execute-ptb {
+      background: linear-gradient(135deg, var(--sui-blue), #0284c7);
+      color: var(--bg-main);
+      box-shadow: 0 4px 14px var(--sui-glow);
+    }
+
+    .action-trigger-btn.execute-ptb:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    /* CENTER VIEWPORT: HIGH PERFORMANCE LIQUIDITY PROFILE */
+    .chart-central-viewport {
+      background-color: #030712;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-top-control-bar {
+      height: 40px;
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .pool-selection-tabs {
+      display: flex;
+      gap: 12px;
+    }
+
+    .pool-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .pool-tab-btn.active {
+      color: var(--sui-blue);
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+    }
+
+    .parallel-track-hud {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .track-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .track-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green-glow);
+    }
+
+    .canvas-container-box {
+      flex-grow: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #liquidityEngineCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* TOKENOMICS HUD LAYER */
+    .tokenomics-hud-overlay {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(7, 14, 36, 0.85);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 8px;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 5;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .hud-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .hud-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hud-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .hud-val.gold {
+      color: var(--deep-gold);
+    }
+
+    /* RIGHT PANEL: DEEPBOOK BOOK / STATE / VAULT PROFILES */
+    .orderbook-shelf {
+      border-right: none;
+      border-left: 1px solid var(--border);
+    }
+
+    .ob-header-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 8px 16px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .ob-stream-container {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-grow: 1;
+    }
+
+    .ob-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 4px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      position: relative;
+      align-items: center;
+    }
+
+    .ob-row .val-cell {
+      z-index: 2;
+      position: relative;
+    }
+
+    .ob-row .val-cell:last-child {
+      text-align: right;
+    }
+
+    .ob-row .val-cell:nth-child(2) {
+      text-align: center;
+    }
+
+    .ob-row .fill-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.12;
+      transition: width 0.3s ease;
+    }
+
+    .ob-row.ask .val-cell.price {
+      color: var(--red);
+    }
+
+    .ob-row.ask .fill-overlay {
+      background-color: var(--red);
+    }
+
+    .ob-row.bid .val-cell.price {
+      color: var(--green);
+    }
+
+    .ob-row.bid .fill-overlay {
+      background-color: var(--green);
+    }
+
+    .ob-mid-spread-bar {
+      background: rgba(11, 21, 54, 0.4);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* TIER 3: LEDGER AND TRANSACTION PIPELINE LOGS */
+    .bottom-ledger-station {
+      background-color: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      overflow: hidden;
+    }
+
+    .ledger-split-block {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .ledger-split-block:last-child {
+      border-right: none;
+    }
+
+    .table-wrapper {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .ledger-table-view {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .ledger-table-view th {
+      background-color: rgba(0, 0, 0, 0.3);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.05em;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .ledger-table-view td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .status-pill {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .status-pill.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .pipeline-stream-view {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 12px;
+      background: #040817;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .log-node {
+      margin-bottom: 6px;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-meta-line {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 10px;
+      margin-bottom: 2px;
+    }
+
+    .log-payload {
+      color: #e2e8f0;
+      padding-left: 8px;
+      border-left: 2px solid var(--sui-blue);
+    }
+
+    .log-payload.flash {
+      border-left-color: var(--deep-gold);
+    }
+
+    /* KEYFRAME ANIMATIONS FOR THE MODERN UI PLATFORM */
+    @keyframes pulse-border {
+
+      0%,
+      100% {
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 4px rgba(16, 185, 129, 0.1);
+      }
+
+      50% {
+        border-color: rgba(16, 185, 129, 0.8);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="terminal-wrapper">
+    <header class="top-telemetry-strip">
+      <div class="branding-cluster">
+        <h1 class="branding-title">DEEPBOOK // V3 ARCHITECTURE</h1>
+        <span class="engine-status-tag">Mysticeti Engine Connected</span>
+      </div>
+
+      <div class="live-tickers-strip">
+        <div class="ticker-block">
+          <span class="tick-lbl">DEEP / USDC</span>
+          <span class="tick-val deep" id="deep-ticker-price">--.--</span>
+        </div>
+        <div class="ticker-block">
+          <span class="tick-lbl">SUI / USDC</span>
+          <span class="tick-val sui" id="sui-ticker-price">--.--</span>
+        </div>
+        <div class="ticker-block">
+          <span class="tick-lbl">Ecosystem Tps</span>
+          <span class="tick-val green" id="tps-ticker">28,450</span>
+        </div>
+        <div class="ticker-block">
+          <span class="tick-lbl">Finality</span>
+          <span class="tick-val" style="color:#a855f7;">390 ms</span>
+        </div>
+      </div>
+
+      <div class="balance-manager-badge">
+        <div class="bm-meta">
+          <span class="bm-title">BalanceManager Object</span>
+          <span class="bm-id">0xdb39a...67f892a</span>
+        </div>
+        <div class="bm-meta" style="border-left: 1px solid var(--border); padding-left: 14px;">
+          <span class="bm-title">Staked Engine Mode</span>
+          <span class="bm-id" style="color: var(--deep-gold);">Wholesale Liquidity</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="core-workspace">
+      <section class="panel-shelf">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">Atomic Execution Matrix</span>
+        </div>
+
+        <div class="scrollable-config-box">
+          <div class="execution-toggle-row">
+            <button class="exec-toggle-btn active" onclick="switchMode('spot')">Spot</button>
+            <button class="exec-toggle-btn" onclick="switchMode('margin')">Margin</button>
+            <button class="exec-toggle-btn" onclick="switchMode('swap')">Swap</button>
+            <button class="exec-toggle-btn flash" onclick="switchMode('flash')">Flash</button>
+          </div>
+
+          <div class="control-group">
+            <label class="control-lbl">Asset Pool Registry</label>
+            <div class="input-housing">
+              <select id="assetPoolSelect" onchange="onPoolChange()">
+                <option value="SUI_USDC">SUI / USDC (Shared Vault System)</option>
+                <option value="DEEP_SUI">DEEP / SUI (Incentive Pool v3)</option>
+                <option value="DEEP_USDC">DEEP / USDC (Dynamic Fees Module)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-lbl">Order Side Allocation</label>
+            <div class="execution-toggle-row" style="grid-template-columns: 1fr 1fr; padding: 0; border: none;">
+              <button class="exec-toggle-btn active" id="side-buy-btn" onclick="switchSide('buy')"
+                style="background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green);">BID
+                (Taker)</button>
+              <button class="exec-toggle-btn" id="side-sell-btn" onclick="switchSide('sell')">ASK (Maker)</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-lbl" id="amount-label">Order Volume / Size</label>
+            <div class="input-housing">
+              <input type="number" id="executionAmount" value="1000.000" step="10">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-lbl">Programmable Transaction Block (PTB)</label>
+            <div class="ptb-matrix-box">
+              <div class="ptb-chain-node">
+                <div class="ptb-meta">
+                  <span class="ptb-step-num">1</span>
+                  <span class="ptb-label" id="ptb-step1-lbl">Borrow Asset via Flash Loan</span>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="ptb-step1-toggle" checked>
+                  <span class="slider-ui"></span>
+                </label>
+              </div>
+
+              <div class="ptb-chain-node">
+                <div class="ptb-meta">
+                  <span class="ptb-step-num">2</span>
+                  <span class="ptb-label">Execute Arbitrage Matching Order</span>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" checked disabled>
+                  <span class="slider-ui"></span>
+                </label>
+              </div>
+
+              <div class="ptb-chain-node">
+                <div class="ptb-meta">
+                  <span class="ptb-step-num">3</span>
+                  <span class="ptb-label">Deposit State Rent Rebates to BM</span>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="ptb-step3-toggle" checked>
+                  <span class="slider-ui"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button class="action-trigger-btn execute-ptb" onclick="triggerAtomicPTB()">Execute Atomic PTB Block</button>
+        </div>
+      </section>
+
+      <section class="chart-central-viewport">
+        <div class="chart-top-control-bar">
+          <div class="pool-selection-tabs">
+            <button class="pool-tab-btn active">Live Matching Stream</button>
+            <button class="pool-tab-btn">Order Depth Topology</button>
+          </div>
+          <div class="parallel-track-hud">
+            <div class="track-pill">
+              <div class="track-dot"></div> Track A (Object Parallelized)
+            </div>
+            <div class="track-pill">
+              <div class="track-dot"></div> Track B (Concurrent Execution)
+            </div>
+          </div>
+        </div>
+
+        <div class="tokenomics-hud-overlay">
+          <div class="hud-row">
+            <span class="hud-lbl">DEEP Staked Allocation</span>
+            <span class="hud-val gold" id="hud-staked-val">500,000 DEEP</span>
+          </div>
+          <div class="hud-row">
+            <span class="hud-lbl">Taker Fee Tier</span>
+            <span class="hud-val" id="hud-fee-tier">0.25 bps (Stable Pair Optimized)</span>
+          </div>
+          <div class="hud-row">
+            <span class="hud-lbl">Maker Rebate Accumulator</span>
+            <span class="hud-val green" id="hud-rebate-val">+421.90 SUI</span>
+          </div>
+        </div>
+
+        <div class="canvas-container-box">
+          <canvas id="liquidityEngineCanvas"></canvas>
+        </div>
+      </section>
+
+      <section class="panel-shelf orderbook-shelf">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">DeepBook Shared Book State</span>
+        </div>
+        <div class="ob-header-row">
+          <span>Price</span>
+          <span style="text-align: center;">Size</span>
+          <span style="text-align: right;">Total Liquidity</span>
+        </div>
+
+        <div class="ob-stream-container" id="container-asks" style="justify-content: flex-end;">
+        </div>
+
+        <div class="ob-mid-spread-bar">
+          <span style="color: var(--text-muted); font-size: 10px;">Spread Metric</span>
+          <span id="live-spread-value" style="font-size: 12px; color: #fff;">0.0004</span>
+          <span style="color: var(--green); font-size: 11px;">▲ Optimal</span>
+        </div>
+
+        <div class="ob-stream-container" id="container-bids">
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottom-ledger-station">
+      <div class="ledger-split-block">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">BalanceManager Active Positions Vault</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="ledger-table-view" id="positions-table">
+            <thead>
+              <tr>
+                <th>Asset Object</th>
+                <th>Total Balance</th>
+                <th>Locked Book Capital</th>
+                <th>Available Vault Liquidity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SUI Token (0x2::sui::SUI)</td>
+                <td id="pos-sui-total">1,240,500.00</td>
+                <td>400,000.00</td>
+                <td style="color: var(--sui-blue);">840,500.00</td>
+                <td><span class="status-pill success">Settled</span></td>
+              </tr>
+              <tr>
+                <td>DEEP Token Engine (0xdee::deep::DEEP)</td>
+                <td id="pos-deep-total">500,000.00</td>
+                <td>0.00</td>
+                <td style="color: var(--deep-gold);">500,000.00</td>
+                <td><span class="status-pill success">Staked</span></td>
+              </tr>
+              <tr>
+                <td>USDC Stablecoin (0x5d::usdc)</td>
+                <td id="pos-usdc-total">4,850,000.00</td>
+                <td>1,250,000.00</td>
+                <td style="color: #fff;">3,600,000.00</td>
+                <td><span class="status-pill success">Settled</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ledger-split-block">
+        <div class="panel-header-tab">
+          <span class="panel-header-title">Programmable Transaction Stream</span>
+        </div>
+        <div class="pipeline-stream-view" id="ptb-pipeline-logs">
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // System Architecture Config Matrix
+    let activeMode = 'spot';
+    let activeSide = 'buy';
+    let activeMarkPrice = 3.8420;
+    const canvas = document.getElementById('liquidityEngineCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // UI Animations Data Matrices
+    let matchingParticles = [];
+    let transactionHistoryLogs = [
+      { id: "Tx-89a1f4", action: "FLASH_LOAN_BORROW", payload: "Borrowed 500,000 USDC from Shared Pool", type: "flash" },
+      { id: "Tx-89a1f5", action: "MATCH_ENGINE_CLEAR", payload: "Cleared 12 Limit Orders via Parallel Track A", type: "system" }
+    ];
+
+    function resizeCanvas() {
+      const box = canvas.parentElement;
+      canvas.width = box.clientWidth;
+      canvas.height = box.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 100);
+
+    // Dynamic Mode Switcher Engine
+    function switchMode(mode) {
+      activeMode = mode;
+      document.querySelectorAll('.exec-toggle-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const label = document.getElementById('amount-label');
+      const step1Lbl = document.getElementById('ptb-step1-lbl');
+
+      if (mode === 'flash') {
+        label.innerText = 'Flash Loan Borrow Volume';
+        step1Lbl.innerText = 'Borrow Asset via Flash Loan (Active)';
+        document.getElementById('ptb-step1-toggle').checked = true;
+      } else {
+        label.innerText = 'Order Volume / Size';
+        step1Lbl.innerText = 'Borrow Asset via Flash Loan';
+      }
+      logPipelineEvent("SYSTEM_UI_RECONFIG", `Switched matching engine profile context to state: ${mode.toUpperCase()}`);
+    }
+
+    function switchSide(side) {
+      activeSide = side;
+      document.getElementById('side-buy-btn').className = 'exec-toggle-btn';
+      document.getElementById('side-sell-btn').className = 'exec-toggle-btn';
+      document.getElementById('side-buy-btn').style = '';
+      document.getElementById('side-sell-btn').style = '';
+
+      if (side === 'buy') {
+        document.getElementById('side-buy-btn').classList.add('active');
+        document.getElementById('side-buy-btn').style = "background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green);";
+      } else {
+        document.getElementById('side-sell-btn').classList.add('active');
+        document.getElementById('side-sell-btn').style = "background: rgba(244, 63, 94, 0.2); color: var(--red); border: 1px solid var(--red);";
+      }
+    }
+
+    function onPoolChange() {
+      const pool = document.getElementById('assetPoolSelect').value;
+      const feeTier = document.getElementById('hud-fee-tier');
+      if (pool === 'SUI_USDC') {
+        activeMarkPrice = 3.8420;
+        feeTier.innerText = "0.25 bps (Stable Pair Optimized)";
+      } else if (pool === 'DEEP_SUI') {
+        activeMarkPrice = 0.0841;
+        feeTier.innerText = "2.5 bps (Volatile Incentivized)";
+      } else {
+        activeMarkPrice = 0.3230;
+        feeTier.innerText = "2.0 bps (Dynamic Governance Model)";
+      }
+      logPipelineEvent("POOL_REGISTRY_SHIFT", `Context switched to Pool Object: ${pool}`);
+    }
+
+    // High Density Simulation Engine
+    function runSimulations() {
+      // Dynamic Tickers Update Loops
+      const deepPrice = 0.3231 + (Math.random() - 0.5) * 0.002;
+      const suiPrice = 3.8420 + (Math.random() - 0.5) * 0.015;
+      document.getElementById('deep-ticker-price').innerText = deepPrice.toFixed(4);
+      document.getElementById('sui-ticker-price').innerText = suiPrice.toFixed(4);
+
+      // Generate Order Book Real-Time Data Streams
+      renderOrderBook();
+
+      // Inject Random Telemetry Noise to match real network activity
+      if (Math.random() > 0.85) {
+        const tpsNoise = 28000 + Math.floor(Math.random() * 1200);
+        document.getElementById('tps-ticker').innerText = tpsNoise.toLocaleString();
+      }
+    }
+
+    function renderOrderBook() {
+      const containerAsks = document.getElementById('container-asks');
+      const containerBids = document.getElementById('container-bids');
+
+      let askHTML = '';
+      let bidHTML = '';
+      let runVolAsks = 0;
+      let runVolBids = 0;
+
+      // Populate Asks (Offers Above Market)
+      for (let i = 8; i >= 1; i--) {
+        let prOffset = activeMarkPrice + (i * (activeMarkPrice * 0.00018));
+        let size = Math.random() * 8500 + 150;
+        runVolAsks += size;
+        let fill = Math.min((runVolAsks / 50000) * 100, 100);
+        askHTML += `
+          <div class="ob-row ask">
+            <div class="fill-overlay" style="width: ${fill}%;"></div>
+            <span class="val-cell price">${prOffset.toFixed(4)}</span>
+            <span class="val-cell" style="color: #cbd5e1; text-align:center;">${size.toFixed(1)}</span>
+            <span class="val-cell">${runVolAsks.toFixed(1)}</span>
+          </div>`;
+      }
+      containerAsks.innerHTML = askHTML;
+
+      // Populate Bids (Orders Below Market)
+      for (let i = 1; i <= 8; i++) {
+        let prOffset = activeMarkPrice - (i * (activeMarkPrice * 0.00018));
+        let size = Math.random() * 9000 + 200;
+        runVolBids += size;
+        let fill = Math.min((runVolBids / 50000) * 100, 100);
+        bidHTML += `
+          <div class="ob-row bid">
+            <div class="fill-overlay" style="width: ${fill}%;"></div>
+            <span class="val-cell price">${prOffset.toFixed(4)}</span>
+            <span class="val-cell" style="color: #cbd5e1; text-align:center;">${size.toFixed(1)}</span>
+            <span class="val-cell">${runVolBids.toFixed(1)}</span>
+          </div>`;
+      }
+      containerBids.innerHTML = bidHTML;
+
+      document.getElementById('live-spread-value').innerText = (activeMarkPrice * 0.00036).toFixed(5);
+    }
+
+    // Modern Pipeline Log Stream Inserter
+    function logPipelineEvent(action, payload, type = "system") {
+      const logsBox = document.getElementById('ptb-pipeline-logs');
+      const timestamp = new Date().toISOString().slice(11, 19);
+      const randomId = "Tx-" + Math.floor(Math.random() * 1000000).toString(16);
+
+      const logNode = document.createElement('div');
+      logNode.className = 'log-node';
+      logNode.innerHTML = `
+        <div class="log-meta-line">
+          <span>[${timestamp}] // ${randomId} // ${action}</span>
+          <span style="color: var(--sui-blue);">VERIFIED</span>
+        </div>
+        <div class="log-payload ${type === 'flash' ? 'flash' : ''}">
+          ${payload}
+        </div>
+      `;
+      logsBox.insertBefore(logNode, logsBox.firstChild);
+    }
+
+    // Action Trigger: Atomic Programmable Transaction Block Build Execution
+    function triggerAtomicPTB() {
+      const amt = document.getElementById('executionAmount').value;
+      const pool = document.getElementById('assetPoolSelect').value;
+
+      if (activeMode === 'flash') {
+        logPipelineEvent("PTB_BLOCK_INITIATED", `Bundling Flash Loan request for ${amt} units on ${pool}`, "flash");
+        setTimeout(() => {
+          logPipelineEvent("SHARED_VAULT_BORROW_SUCCESS", `Acquired capital constraints inside single transactional atomic block`, "flash");
+          logPipelineEvent("BOOK_MATCH_ENGINE_EXECUTE", `Dispatched matching pipeline routing rules across DeepBook v3 parallel structure`, "system");
+          logPipelineEvent("STATE_RENT_REBATE_CLAIM", `Allocated state rent mitigation rebates back to BalanceManager`, "system");
+
+          // Animate canvas burst to emphasize execution flow visually
+          triggerCanvasBurst();
+        }, 400);
+      } else {
+        logPipelineEvent("PTB_SPOT_LIMIT_DISPATCH", `Dispatched Atomic Object order parameters for size: ${amt} units`, "system");
+        setTimeout(() => {
+          logPipelineEvent("BOOK_STATE_SETTLEMENT_COMPLETE", `Vault structural engine finalized resource balancing inside BalanceManager`, "system");
+          triggerCanvasBurst();
+        }, 350);
+      }
+    }
+
+    function triggerCanvasBurst() {
+      for (let i = 0; i < 30; i++) {
+        matchingParticles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          radius: Math.random() * 4 + 2,
+          color: activeSide === 'buy' ? 'rgba(16, 185, 129, 0.8)' : 'rgba(244, 63, 94, 0.8)',
+          alpha: 1
+        });
+      }
+    }
+
+    // 3D Canvas / Dynamic Topology Rendering Loop
+    function renderGraphicsLoop() {
+      ctx.fillStyle = '#030712';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Render Structural Grid Topology Map
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.02)';
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // Draw Simulated Matching Engine Order Book Depth Curves
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.03)';
+      ctx.moveTo(0, canvas.height);
+      for (let x = 0; x < canvas.width / 2; x += 20) {
+        let y = (canvas.height * 0.7) - Math.sin(x * 0.005) * 60 - (Math.random() * 2);
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.3)';
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.03)';
+      ctx.moveTo(canvas.width, canvas.height);
+      for (let x = canvas.width; x > canvas.width / 2; x -= 20) {
+        let y = (canvas.height * 0.7) - Math.sin((canvas.width - x) * 0.005) * 60 - (Math.random() * 2);
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.fill();
+      ctx.stroke();
+
+      // Draw Center Pivot Point of the Matching Engine
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height * 0.5, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = varColor('--sui-blue');
+      ctx.fill();
+
+      // Render Matching Particle Bursts (PTB execution feedback)
+      for (let i = matchingParticles.length - 1; i >= 0; i--) {
+        let p = matchingParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.02;
+        if (p.alpha <= 0) {
+          matchingParticles.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      requestAnimationFrame(renderGraphicsLoop);
+    }
+
+    function varColor(varName) {
+      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    }
+
+    // Initialize System Scripts on load completion
+    setInterval(runSimulations, 400);
+    setTimeout(() => {
+      logPipelineEvent("SYSTEM_READY", "DeepBook v3 architectural workspace successfully constructed.");
+      logPipelineEvent("BALANCE_MANAGER_SYNC", "Synchronized balance profiles safely from Sui on-chain storage.");
+      renderGraphicsLoop();
+    }, 200);
+  </script>
+</body>
+
+</html>
+
+```
