@@ -5,6 +5,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FluidBLCX Engine — Powered by Sui</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;500;700;800&display=swap" rel="stylesheet">
     <style>
         *,
         *::before,
@@ -14,7 +17,7 @@
             padding: 0;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;500;700;800&display=swap');
+
 
         html,
         body {
@@ -733,8 +736,10 @@
                 <a href="Deepbookv3ui/Deepbookv3.html" class="nav-link">DeepBook v3</a>
                 <a href="Deepbookv3ui/deepbookv3login.html" class="nav-link">Login</a>
                 <a href="Deepbookv3ui/deepbookv3portfolio.html" class="nav-link">Portfolio</a>
-                <a href="/security-dashboard" class="nav-link">Security</a>
-                <a href="/walrus-vault" class="nav-link">Vault</a>
+                <a href="security_dashboard.html" class="nav-link" id="navSecurity">Security</a>
+                <a href="walrus_vault.html" class="nav-link" id="navVault">Vault</a>
+                <a href="poison_ai.html" class="nav-link" id="navPoison">Poison AI</a>
+                <a href="trojan_bots.html" class="nav-link" id="navTrojan">Trojan Bots</a>
             </nav>
 
             <div class="nav-controls-right">
@@ -1318,7 +1323,7 @@
                 bg.addColorStop(0.3, '#020920');
                 bg.addColorStop(0.7, '#010512');
                 bg.addColorStop(1, '#010308');
-                ctx.fillStyle = bg; `
+                ctx.fillStyle = bg;
                 ctx.fillRect(0, 0, W, H);
 
                 // 2. Wide outer glow
