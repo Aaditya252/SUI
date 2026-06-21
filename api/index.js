@@ -97,6 +97,34 @@ function fetchJson(url) {
   });
 }
 
+function fetchJsonPost(url, body) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    const u = new URL(url);
+    const opts = {
+      hostname: u.hostname, path: u.pathname + u.search, port: 443,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+      timeout: 15000
+    };
+    const req = https.request(opts, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(d);
+          if (parsed.error) reject(new Error(parsed.error.message || JSON.stringify(parsed.error)));
+          else resolve(parsed);
+        } catch (e) { reject(new Error(d.slice(0, 300))); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', function () { req.destroy(); reject(new Error('timeout')); });
+    req.write(data);
+    req.end();
+  });
+}
+
 async function fetchPrices() {
   const now = Date.now();
   if (priceCache.data && (now - priceCache.ts) < priceCache.ttl) return priceCache.data;
@@ -190,8 +218,12 @@ app.post('/api/assistant', async (req, res) => {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   if (GEMINI_API_KEY) {
     try {
-      const resp = await fetchJson(`https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-1.5-flash'}:generateContent?key=${GEMINI_API_KEY}`);
-      const reply = resp?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini.';
+      const systemPrompt = 'You are Fluid Core Intelligence, an assistive chatbot inside FluidBLCX. Help users understand this Sui app: wallet connection, Sui Move compiler, atomic asset routing, DeepBook-like liquidity, Walrus vault concepts, and the 3D block visualizer. Keep replies concise, practical, and beginner-friendly.';
+      const resp = await fetchJsonPost(
+        `https://generativelanguage.googleapis.com/v1beta/models/${process.env.GEMINI_MODEL || 'gemini-1.5-flash'}:generateContent?key=${GEMINI_API_KEY}`,
+        { contents: [{ role: 'user', parts: [{ text: message }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { temperature: 0.35, maxOutputTokens: 420 } }
+      );
+      const reply = resp?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim() || 'No response from Gemini.';
       return res.json({ success: true, mode: 'gemini', reply });
     } catch (e) {
       return res.json({ success: true, mode: 'local-fallback', reason: e.message, reply: localAssistantReply(message) });
