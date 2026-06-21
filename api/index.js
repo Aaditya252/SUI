@@ -479,22 +479,30 @@ app.post('/api/compile-stream', async (req, res) => {
   const { code } = req.body || {};
   if (!code || !code.trim()) return res.status(400).json({ success: false, error: 'Code is required.' });
 
-  const lines = [];
-  lines.push('[INFO] Sui CLI not available on Vercel. Running FluidBLCX local SUI Move compiler...');
-  lines.push('[INFO] Parsing module declaration...');
-  lines.push('[INFO] Checking delimiters, imports, structs, and functions...');
-  const result = validateMoveSource(code);
-  lines.push(`[INFO] ${result.stats.lines} lines, ${result.stats.imports} imports, ${result.stats.structs} structs, ${result.stats.functions} functions analyzed.`);
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders && res.flushHeaders();
 
-  if (!result.success) {
-    result.diagnostics.forEach(diag => lines.push(`[ERROR] fluid_workspace.move:${diag.line}:${diag.column} ${diag.message}`));
-    lines.push('[DONE] {"success":false,"mode":"local"}');
-  } else {
-    lines.push(`[SUCCESS] ${result.moduleName || 'Move module'} passed local SUI Move validation.`);
-    lines.push('[DONE] {"success":true,"mode":"local"}');
+  function sendLine(line) {
+    try { res.write(`data: ${line.replace(/\n/g, '\\n')}\n\n`); } catch (e) { /* ignore */ }
   }
 
-  res.json({ success: result.success, mode: 'local', output: lines.join('\n'), lines, diagnostics: result.diagnostics, stats: result.stats });
+  sendLine('[INFO] Sui CLI not available on Vercel. Running FluidBLCX local SUI Move compiler...');
+  sendLine('[INFO] Parsing module declaration...');
+  sendLine('[INFO] Checking delimiters, imports, structs, and functions...');
+  const result = validateMoveSource(code);
+  sendLine(`[INFO] ${result.stats.lines} lines, ${result.stats.imports} imports, ${result.stats.structs} structs, ${result.stats.functions} functions analyzed.`);
+
+  if (!result.success) {
+    result.diagnostics.forEach(diag => sendLine(`[ERROR] fluid_workspace.move:${diag.line}:${diag.column} ${diag.message}`));
+    sendLine('[DONE] {"success":false,"mode":"local"}');
+  } else {
+    sendLine(`[SUCCESS] ${result.moduleName || 'Move module'} passed local SUI Move validation.`);
+    sendLine('[DONE] {"success":true,"mode":"local"}');
+  }
+
+  res.end();
 });
 
 app.get('/api/compile', (req, res) => {

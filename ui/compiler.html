@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FluidBLCX Engine — Advanced Compiler & 3D Node Tracker</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+
     *,
     *::before,
     *::after {
@@ -13,8 +15,6 @@
       margin: 0;
       padding: 0;
     }
-
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=400;500;600;700;800&family=JetBrains+Mono:wght=400;500;700;800&display=swap');
 
     html,
     body {
@@ -799,7 +799,8 @@
     const hoverCard = document.getElementById('hoverCard');
     const btnSimulate = document.getElementById('btnSimulate');
     const btnCompile = document.getElementById('btnCompile');
-    const apiBaseUrl = window.location.port === '3000' ? '' : 'http://localhost:3000';
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const apiBaseUrl = isLocalDev && window.location.port !== '3000' ? 'http://localhost:3000' : '';
 
     function apiUrl(path) {
       return `${apiBaseUrl}${path}`;
@@ -847,6 +848,7 @@
     }
 
 function appendCompiledBlock(statusLabel = "COMPILED / LOCAL VALIDATED") {
+      if (!blocksArray || blocksArray.length === 0 || typeof THREE === 'undefined') return;
       const lastNodePos = blocksArray[blocksArray.length - 1].position;
       const nextPosition = new THREE.Vector3(
         Math.min(lastNodePos.x + 3.5, 15),
@@ -1139,6 +1141,7 @@ function appendCompiledBlock(statusLabel = "COMPILED / LOCAL VALIDATED") {
     }
 
     container.addEventListener('pointermove', async (e) => {
+      if (typeof renderer === 'undefined' || !renderer.domElement) return;
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1213,7 +1216,7 @@ function appendCompiledBlock(statusLabel = "COMPILED / LOCAL VALIDATED") {
     });
 
     window.addEventListener('resize', () => {
-      if (!container) return;
+      if (!container || typeof camera === 'undefined' || typeof renderer === 'undefined') return;
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);

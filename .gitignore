@@ -12,3 +12,8 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 tools/sui/
+
+server_debug.txt
+server_err.txt
+server_out.txt
+compile_result.txt

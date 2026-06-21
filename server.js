@@ -290,7 +290,7 @@ function runSuiBuild(code, onLine) {
         onLine && onLine(`[INFO] Temporary Sui package created at ${tempDir}`);
         let child;
         try {
-            child = spawn(resolveSuiBinary(), ['move', 'build'], { cwd: tempDir, shell: false });
+            child = spawn(resolveSuiBinary(), ['move', 'build', '--build-env', 'testnet'], { cwd: tempDir, shell: false });
         } catch (err) {
             try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (e) {}
             resolve({ success: false, output: '', error: `Unable to start Sui CLI: ${err.message}` });
